@@ -1,9 +1,59 @@
-import React, { useState } from 'react';
+import type React from 'react';
+import { useState } from 'react';
 import { Wrench } from 'lucide-react';
 import { useHotkey } from '~/hooks/useHotKey';
 import { debugData } from '~/utils/debugData';
+import {
+	clearPersistentNotification,
+	showNotification,
+	showPersistentNotification,
+} from '~/store/notifications';
 
 type Mode = 'quick' | 'panel' | null;
+
+const DEV_PERSISTENT_IDS = [
+	'dev-persistent-info',
+	'dev-persistent-success',
+	'dev-persistent-warning',
+	'dev-persistent-error',
+];
+
+const DEV_PERSISTENT_ENTRIES = [
+	{
+		id: DEV_PERSISTENT_IDS[0] as string,
+		payload: {
+			title: 'Persistent info',
+			description: 'Stays until the dev button is pressed again.',
+			variant: 'info' as const,
+		},
+	},
+	{
+		id: DEV_PERSISTENT_IDS[1] as string,
+		payload: {
+			title: 'Persistent success',
+			description: 'Stays until the dev button is pressed again.',
+			variant: 'success' as const,
+		},
+	},
+	{
+		id: DEV_PERSISTENT_IDS[2] as string,
+		payload: {
+			title: 'Persistent warning',
+			description: 'Stays until the dev button is pressed again.',
+			variant: 'warning' as const,
+		},
+	},
+	{
+		id: DEV_PERSISTENT_IDS[3] as string,
+		payload: {
+			title: 'Persistent error',
+			description: 'Stays until the dev button is pressed again.',
+			variant: 'error' as const,
+		},
+	},
+];
+
+let devPersistentShown = false;
 
 export const DevTools: React.FC = () => {
 	const [isOpen, setIsOpen] = useState(false);
@@ -15,6 +65,39 @@ export const DevTools: React.FC = () => {
 				data: { tab } as { tab: Mode },
 			},
 		]);
+	};
+
+	const showTransientNotifications = () => {
+		showNotification({
+			title: 'Dev info toast',
+			description: 'Auto-dismisses after 4 seconds.',
+			variant: 'info',
+			duration: 4000,
+		});
+		showNotification({
+			title: 'Dev success toast',
+			description: 'Auto-dismisses after 4 seconds.',
+			variant: 'success',
+			duration: 4000,
+		});
+		showNotification({
+			title: 'Dev error toast',
+			description: 'Auto-dismisses after 4 seconds.',
+			variant: 'error',
+			duration: 4000,
+		});
+	};
+
+	const togglePersistentNotifications = () => {
+		if (devPersistentShown) {
+			for (const id of DEV_PERSISTENT_IDS) clearPersistentNotification(id);
+			devPersistentShown = false;
+		} else {
+			for (const entry of DEV_PERSISTENT_ENTRIES) {
+				showPersistentNotification(entry.id, entry.payload);
+			}
+			devPersistentShown = true;
+		}
 	};
 
 	useHotkey(
@@ -50,6 +133,7 @@ export const DevTools: React.FC = () => {
 					</div>
 
 					<button
+						type="button"
 						onClick={() => sendVisibilityEvent('quick')}
 						className="px-2.5 py-1.5 rounded text-left hover:bg-zinc-800 hover:text-white transition-colors flex items-center justify-between"
 					>
@@ -60,6 +144,7 @@ export const DevTools: React.FC = () => {
 					</button>
 
 					<button
+						type="button"
 						onClick={() => sendVisibilityEvent('panel')}
 						className="px-2.5 py-1.5 rounded text-left hover:bg-zinc-800 hover:text-white transition-colors flex items-center justify-between"
 					>
@@ -70,15 +155,37 @@ export const DevTools: React.FC = () => {
 					</button>
 
 					<button
+						type="button"
 						onClick={() => sendVisibilityEvent(null)}
 						className="px-2.5 py-1.5 rounded text-left hover:bg-red-950/50 text-red-400 hover:text-red-300 transition-colors"
 					>
 						Close / Hide (null)
 					</button>
+
+					<div className="border-t border-zinc-800 my-1" />
+
+					<button
+						type="button"
+						onClick={showTransientNotifications}
+						className="px-2.5 py-1.5 rounded text-left hover:bg-zinc-800 hover:text-white transition-colors"
+					>
+						Notify (4 temporary)
+					</button>
+
+					<button
+						type="button"
+						onClick={togglePersistentNotifications}
+						className="px-2.5 py-1.5 rounded text-left hover:bg-zinc-800 hover:text-white transition-colors"
+					>
+						{devPersistentShown
+							? 'Clear (4 persistent)'
+							: 'Notify (4 persistent)'}
+					</button>
 				</div>
 			)}
 
 			<button
+				type="button"
 				onClick={() => setIsOpen((prev) => !prev)}
 				title="Toggle Dev Menu (Ctrl+Shift+D)"
 				className={`flex items-center justify-center w-10 h-10 rounded-full shadow-lg border transition-all duration-200 ${
