@@ -21,6 +21,9 @@ export const EVENT_NAMES = {
 
 	/** server -> client notification that the player's permissions changed */
 	S2C_PERMISSIONS_UPDATED: 'fxmanager:s2c:permissions:updated',
+
+	/** server -> client push of a notification payload for the player's NUI */
+	S2C_NOTIFICATION: 'fxmanager:s2c:notification',
 } as const;
 
 /** callback names registered on the server and triggered by the client */

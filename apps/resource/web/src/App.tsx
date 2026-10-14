@@ -3,6 +3,8 @@ import { MainPanel } from './components/MainPanel';
 import { QuickMenu } from './components/QuickMenu';
 import { NoclipControls } from './components/NoclipControls';
 import { useNuiEvent } from './hooks/useNuiEvent';
+import { useNotificationEvents } from './hooks/useNotificationEvents';
+import { NotificationViewport } from './components/notifications';
 import { debugData } from './utils/debugData';
 import { isEnvBrowser } from './utils/misc';
 import { DevTools } from './components/devtools';
@@ -34,6 +36,8 @@ export default function App() {
 		setMode((m) => (m === tab ? null : tab));
 	});
 
+	useNotificationEvents();
+
 	useEffect(() => {
 		fetchNui('nuiloaded');
 	}, []);
@@ -61,6 +65,8 @@ export default function App() {
 				<MainPanel permissions={permissions} onClose={() => setMode(null)} />
 			)}
 			<NoclipControls visible={isEnvBrowser() || noclipEnabled} />
+			{/* notifications render on top of everything, menu or panel open or closed */}
+			<NotificationViewport />
 			{isEnvBrowser() && <DevTools />}
 		</>
 	);
