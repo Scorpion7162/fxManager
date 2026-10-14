@@ -1,9 +1,14 @@
 import type { PlayerUpdatePackage } from '@fxmanager/shared/types';
 import { QueryManager } from '../utils/query';
 import { getPermissions } from '../utils/permissions';
-import { UserPermissionKey } from '@common/types';
+import type { UserPermissionKey } from '@common/types';
 import { PermissionManager } from '@fxmanager/shared/utils';
 import { UserPermissions } from '@fxmanager/shared/constants';
+
+export interface PlayerFilter {
+	/** only return sources holding this permission (master admins always match) */
+	permission?: UserPermissionKey;
+}
 
 class PlayerManager {
 	private players: Map<string, { permissions: number }> = new Map();
@@ -44,6 +49,19 @@ class PlayerManager {
 			player.permissions,
 			UserPermissions[permission],
 		);
+	}
+
+	/**
+	 * Tracked player sources as numbers. Optionally filter by a permission
+	 * (bitfield check against the cached snapshot).
+	 */
+	getPlayers(filter?: PlayerFilter): number[] {
+		const sources = [...this.players.keys()].map(Number);
+
+		const { permission } = filter ?? {};
+		if (!permission) return sources;
+
+		return sources.filter((src) => this.isAllowed(src, permission));
 	}
 
 	private startUpdates() {
