@@ -41,6 +41,9 @@ function startQuickMenuNavigation() {
 
 				if (IsDisabledControlJustPressed(0, control)) {
 					sendNav(direction);
+
+					// sleep to avoid detecting long press as multiple presses
+					await sleep(10);
 				}
 			}
 
