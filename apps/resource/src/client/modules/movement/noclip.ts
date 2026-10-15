@@ -10,6 +10,14 @@ import {
 import { permissions } from '../../utils/permissions';
 import { ClientCallbacks } from '../../utils/callbacks';
 import { NuiCallback } from '../../utils/nui-callbacks';
+import {
+	clearPersistentNotification,
+	notify,
+	showPersistentNotification,
+} from '../notifications';
+
+/** persistent banner key */
+const NOCLIP_NOTIFICATION_ID = 'noclip-active';
 
 // Explicit key mapping
 const MOVE_ASCEND_KEY = Control.Jump; // Space bar
@@ -112,6 +120,23 @@ class NoclipController {
 
 		const isVeh = noClippingEntity instanceof Vehicle;
 		this.isNoClipping = val;
+
+		if (val) {
+			showPersistentNotification(NOCLIP_NOTIFICATION_ID, {
+				title: 'Noclip active',
+				variant: 'info',
+				sound: { ref: 'TOGGLE_ON', set: 'HUD_FRONTEND_DEFAULT_SOUNDSET' },
+			});
+		} else {
+			clearPersistentNotification(NOCLIP_NOTIFICATION_ID);
+
+			notify({
+				title: 'Noclip disabled',
+				variant: 'info',
+				duration: 3000,
+				sound: { ref: 'TOGGLE_OFF', set: 'HUD_FRONTEND_DEFAULT_SOUNDSET' },
+			});
+		}
 
 		if (this.isNoClipping) {
 			PlaySoundFromEntity(
