@@ -22,6 +22,7 @@ import { fetchNui } from '~/utils/fetchNui';
 import { PromptDialog, type PromptDialogProps } from './DialogPrompt';
 import { isEnvBrowser } from '~/utils/misc';
 import { UserPermissions } from '@fxmanager/shared/constants';
+import { showNotification } from '~/store/notifications';
 
 type NavigationDirection =
 	| 'up'
@@ -110,11 +111,11 @@ export function QuickMenu({
 		const [x, y, z] = coordsString.split(', ').map((c) => parseFloat(c));
 
 		fetchNui('teleport-coords', { x, y, z });
-	});
+	}, []);
 
 	const handleTeleportToMarker = useCallback(() => {
 		fetchNui('teleport-marker');
-	});
+	}, []);
 
 	const items: QuickActionItem[] = [
 		{
@@ -145,7 +146,14 @@ export function QuickMenu({
 						{ label: 'LS Airport', value: '-1037.6, -2737.8, 13.8' },
 						{ label: 'Sandy Shores', value: '1850.1, 3686.2, 33.8' },
 					],
-					onConfirm: handleTeleportToCoords,
+					onConfirm: (coords) => {
+						handleTeleportToCoords(coords);
+						showNotification({
+							title: 'Teleported',
+							description: `To: ${coords}`,
+							variant: 'success',
+						});
+					},
 				});
 			},
 		},
@@ -165,7 +173,14 @@ export function QuickMenu({
 			label: 'Player tags',
 			icon: Tags,
 			checked: tags,
-			onChange: setTags,
+			onChange: (next) => {
+				setTags(next);
+				showNotification({
+					title: next ? 'Player names enabled' : 'Player names disabled',
+					variant: 'info',
+					duration: 3000,
+				});
+			},
 		},
 		{
 			type: 'toggle',
@@ -174,7 +189,14 @@ export function QuickMenu({
 			label: 'Player blips',
 			icon: Radar,
 			checked: blips,
-			onChange: setBlips,
+			onChange: (next) => {
+				setBlips(next);
+				showNotification({
+					title: next ? 'Player blips enabled' : 'Player blips disabled',
+					variant: 'info',
+					duration: 3000,
+				});
+			},
 		},
 		{
 			type: 'button',
@@ -198,7 +220,14 @@ export function QuickMenu({
 					// Regex for numeric Server IDs
 					pattern: /^\d+$/,
 					errorMessage: 'Must be a valid numeric Server ID',
-					onConfirm: (val) => console.log('Healing player ID:', val),
+					onConfirm: (serverId) => {
+						console.log('Healing player ID:', serverId);
+						showNotification({
+							title: 'Heal sent',
+							description: `Server ID: ${serverId}`,
+							variant: 'success',
+						});
+					},
 				});
 			},
 		},
@@ -231,7 +260,14 @@ export function QuickMenu({
 						{ label: 'Police Car', value: 'police' },
 					],
 					confirmLabel: 'Spawn',
-					onConfirm: (val) => console.log('Spawning vehicle:', val),
+					onConfirm: (model) => {
+						console.log('Spawning vehicle:', model);
+						showNotification({
+							title: 'Vehicle spawned',
+							description: model,
+							variant: 'success',
+						});
+					},
 				});
 			},
 		},
@@ -241,7 +277,10 @@ export function QuickMenu({
 			group: 'Vehicle',
 			label: 'Fix vehicle',
 			icon: Wrench,
-			onSelect: () => console.log('fix vehicle'),
+			onSelect: () => {
+				console.log('fix vehicle');
+				showNotification({ title: 'Vehicle repaired', variant: 'success' });
+			},
 		},
 		{
 			type: 'button',
@@ -250,7 +289,10 @@ export function QuickMenu({
 			label: 'Delete vehicle',
 			icon: Trash2,
 			variant: 'destructive',
-			onSelect: () => console.log('delete vehicle'),
+			onSelect: () => {
+				console.log('delete vehicle');
+				showNotification({ title: 'Vehicle deleted', variant: 'warning' });
+			},
 		},
 	];
 
