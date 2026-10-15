@@ -4,6 +4,7 @@ import { getPermissions } from '../utils/permissions';
 import type { UserPermissionKey } from '@common/types';
 import { PermissionManager } from '@fxmanager/shared/utils';
 import { UserPermissions } from '@fxmanager/shared/constants';
+import { IsInDevelopment } from '@common/utils';
 
 export interface PlayerFilter {
 	/** only return sources holding this permission (master admins always match) */
@@ -95,3 +96,13 @@ class PlayerManager {
 }
 
 export const playerManager = new PlayerManager();
+
+if (IsInDevelopment()) {
+	const players = getPlayers();
+
+	for (const id of players) {
+		playerManager.addPlayer(parseInt(id, 10));
+	}
+
+	console.log('[DEV] PLayerManager: added', players.length, 'players to monitor');
+}
