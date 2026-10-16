@@ -33,14 +33,15 @@
 		"vite": "^5.4.14"
 	},
 	"dependencies": {
-		"@overextended/ox_lib": "latest",
-		"@fxmanager/ui": "workspace:*",
 		"@fxmanager/shared": "workspace:*",
+		"@fxmanager/ui": "workspace:*",
 		"@nativewrappers/fivem": "latest",
+		"@overextended/ox_lib": "latest",
 		"lucide-react": "^1.27.0",
 		"node-fetch": "^3.3.2",
 		"react": "^18.3.1",
 		"react-dom": "^18.3.1",
-		"zod": "^4.3.6"
+		"zod": "^4.3.6",
+		"zustand": "^5.0.15"
 	}
 }
