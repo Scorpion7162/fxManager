@@ -423,11 +423,16 @@ export function QuickMenu({
 											/>
 											<span>{item.label}</span>
 										</div>
-										<Switch
-											checked={item.checked}
-											onCheckedChange={item.onChange}
-											tabIndex={-1}
-										/>
+
+										<div
+											className={`flex h-4 w-4 items-center justify-center rounded-full transition-colors ${
+												isFocused ? 'bg-black/65' : 'bg-muted-foreground/25'
+											}`}
+										>
+											{item.checked && (
+												<div className="h-2 w-2 rounded-full bg-primary" />
+											)}
+										</div>
 									</div>
 								) : (
 									<Button
