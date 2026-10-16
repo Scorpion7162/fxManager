@@ -15,6 +15,7 @@ import {
 	notify,
 	showPersistentNotification,
 } from '../notifications';
+import { updateMenuStore } from '../nui/quickmenu';
 
 /** persistent banner key */
 const NOCLIP_NOTIFICATION_ID = 'noclip-active';
@@ -76,11 +77,9 @@ class NoclipController {
 			{ fallback: { allowed: false, state: false } },
 		);
 
-		if (response.allowed && response.state) {
-			await this.setNoClip(true);
-		} else {
-			await this.setNoClip(false);
-		}
+		const newState = response.allowed && response.state;
+		await this.setNoClip(newState);
+		updateMenuStore('no-clip', newState);
 
 		return this.isNoClipping;
 	}
