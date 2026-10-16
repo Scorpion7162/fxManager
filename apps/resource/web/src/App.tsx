@@ -12,6 +12,7 @@ import { NUI_PERMISSIONS_EVENT } from '@common/types';
 import { UserPermissions } from '@fxmanager/shared/constants';
 import { fetchNui } from './utils/fetchNui';
 import { useHotkey } from './hooks/useHotKey';
+import { useMenuStore } from './store/menustore';
 
 type Mode = 'quick' | 'panel' | null;
 
@@ -24,10 +25,11 @@ debugData([
 
 export default function App() {
 	const [mode, setMode] = useState<Mode>(null);
-	const [noclipEnabled, setNoclipEnabled] = useState(false);
 	const [permissions, setPermissions] = useState<number>(
 		isEnvBrowser() ? UserPermissions.MASTER : 0,
 	);
+
+	const noclipEnabled = useMenuStore((state) => state.noclip);
 
 	/** sends the bitfield permission value */
 	useNuiEvent<number>(NUI_PERMISSIONS_EVENT, setPermissions);
@@ -54,11 +56,7 @@ export default function App() {
 		<>
 			{mode === 'quick' && (
 				<div className="fixed left-6 top-6">
-					<QuickMenu
-						permissions={permissions}
-						onClose={() => setMode(null)}
-						onNoclipChange={setNoclipEnabled}
-					/>
+					<QuickMenu permissions={permissions} onClose={() => setMode(null)} />
 				</div>
 			)}
 			{mode === 'panel' && (

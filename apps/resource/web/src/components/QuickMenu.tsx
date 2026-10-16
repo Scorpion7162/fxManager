@@ -23,6 +23,7 @@ import { PromptDialog, type PromptDialogProps } from './DialogPrompt';
 import { isEnvBrowser } from '~/utils/misc';
 import { UserPermissions } from '@fxmanager/shared/constants';
 import { showNotification } from '~/store/notifications';
+import { useMenuStore } from '~/store/menustore';
 
 type NavigationDirection =
 	| 'up'
@@ -57,23 +58,16 @@ type DialogConfig = Omit<PromptDialogProps, 'isOpen' | 'onClose'>;
 
 interface QuickMenuProps {
 	onClose: () => void;
-	onNoclipChange: (enabled: boolean) => void;
 	permissions: number;
 }
 
-export function QuickMenu({
-	onClose,
-	onNoclipChange,
-	permissions,
-}: QuickMenuProps) {
+export function QuickMenu({ onClose, permissions }: QuickMenuProps) {
 	if (permissions === UserPermissions.NONE) return null;
 
-	const [noclip, setNoclip] = useState(false);
-	const [tags, setTags] = useState(true);
-	const [blips, setBlips] = useState(false);
 	const [activeDialog, setActiveDialogState] = useState<DialogConfig | null>(
 		null,
 	);
+	const { noclip, tags, blips, setNoclip, setTags, setBlips } = useMenuStore();
 
 	// Helper function that updates local dialog state and syncs NUI focus with client
 	const setActiveDialog = useCallback((config: DialogConfig | null) => {
@@ -90,22 +84,17 @@ export function QuickMenu({
 		};
 	}, [activeDialog]);
 
-	const handleNoclipToggle = useCallback(
-		(targetState: boolean) => {
-			fetchNui<{ success: boolean; active: boolean }>('toggle-noclip', {
+	const handleNoclipToggle = useCallback((targetState: boolean) => {
+		if (isEnvBrowser()) return setNoclip(targetState);
+
+		fetchNui<{ success: boolean; active: boolean }>(
+			'toggle-noclip',
+			{
 				state: targetState,
-			})
-				.then((res) => {
-					setNoclip(res.active);
-					onNoclipChange(res.active);
-				})
-				.catch(() => {
-					setNoclip(false);
-					onNoclipChange(false);
-				});
-		},
-		[onNoclipChange],
-	);
+			},
+			{ data: { success: true, active: targetState }, delay: 50 },
+		);
+	}, []);
 
 	const handleTeleportToCoords = useCallback((coordsString: string) => {
 		const [x, y, z] = coordsString.split(', ').map((c) => parseFloat(c));
