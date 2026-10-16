@@ -29,7 +29,6 @@ export function notifyAll(
 	payload: NotificationPayload,
 	opts: NotifyAllOptions = {},
 ): void {
-	console.log('NotifyAll was called')
 	for (const source of playerManager.getPlayers({
 		permission: opts.permission,
 	})) {

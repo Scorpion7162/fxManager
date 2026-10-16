@@ -104,5 +104,9 @@ if (IsInDevelopment()) {
 		playerManager.addPlayer(parseInt(id, 10));
 	}
 
-	console.log('[DEV] PLayerManager: added', players.length, 'players to monitor');
+	console.log(
+		'[DEV] PLayerManager: added',
+		players.length,
+		'players to monitor',
+	);
 }

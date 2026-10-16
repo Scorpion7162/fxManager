@@ -62,7 +62,7 @@ export const PERMISSION_ACE_KEYS: Record<number, string> = {
 	[UserPermissions.PERFORMANCE]: 'system.performance',
 	[UserPermissions.CONFIG_EDITOR]: 'server.cfg_editor',
 	[UserPermissions.NOCLIP]: 'game.noclip',
-	[UserPermissions.TELEPORT]: 'game.teleport'
+	[UserPermissions.TELEPORT]: 'game.teleport',
 };
 
 export const PERMISSION_LABELS: Record<
