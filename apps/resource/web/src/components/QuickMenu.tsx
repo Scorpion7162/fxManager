@@ -289,18 +289,13 @@ export function QuickMenu({ onClose, permissions }: QuickMenuProps) {
 		() => Array.from(new Set(items.map((i) => i.group))),
 		[items],
 	);
-	const [activeGroupIndex, setActiveGroupIndex] = useState(0);
-	const activeGroup = groups[activeGroupIndex];
+
+	const [activeGroup] = useMenuStore((state) => state.item);
 
 	const activeItems = useMemo(
 		() => items.filter((i) => i.group === activeGroup),
 		[items, activeGroup],
 	);
-
-	const nextGroup = () =>
-		setActiveGroupIndex((prev) => (prev + 1) % groups.length);
-	const prevGroup = () =>
-		setActiveGroupIndex((prev) => (prev - 1 + groups.length) % groups.length);
 
 	const {
 		activeIndex,
@@ -312,6 +307,7 @@ export function QuickMenu({ onClose, permissions }: QuickMenuProps) {
 		resetFocus,
 	} = useRovingFocus({
 		itemCount: activeItems.length,
+		groups,
 		disabled: activeDialog !== null,
 		onActivate: (index) => {
 			const item = activeItems[index];
@@ -319,8 +315,6 @@ export function QuickMenu({ onClose, permissions }: QuickMenuProps) {
 			if (item.type === 'button') item.onSelect();
 			if (item.type === 'toggle') item.onChange(!item.checked);
 		},
-		onNextCategory: nextGroup,
-		onPrevCategory: prevGroup,
 	});
 
 	useNuiEvent<NavigationDirection>('navigate', (direction) => {

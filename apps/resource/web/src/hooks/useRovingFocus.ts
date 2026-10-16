@@ -1,67 +1,63 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
+import { useMenuStore } from '~/store/menustore';
 import { isEnvBrowser } from '~/utils/misc';
 
 interface UseRovingFocusOptions {
 	itemCount: number;
+	groups: string[];
 	disabled?: boolean;
 	onActivate?: (index: number) => void;
-	onNextCategory?: () => void;
-	onPrevCategory?: () => void;
 }
 
 export function useRovingFocus({
 	itemCount,
+	groups,
 	disabled = false,
 	onActivate,
-	onNextCategory,
-	onPrevCategory,
 }: UseRovingFocusOptions) {
 	// index -1 = Category Header Bar, 0 to itemCount - 1 = Action items
-	const [activeIndex, setActiveIndex] = useState(0);
+	const [activeGroup, activeIndex] = useMenuStore((state) => state.item);
+	const setItem = useMenuStore((state) => state.setItem);
+
+	// Fallback to the first group if the stored group becomes invalid
+	const currentGroup = groups.includes(activeGroup)
+		? activeGroup
+		: groups[0] || '';
 
 	const moveDown = useCallback(() => {
-		setActiveIndex((prev) => {
-			if (prev < itemCount - 1) return prev + 1;
-			return 0;
-		});
-	}, [itemCount]);
+		const next = activeIndex < itemCount - 1 ? activeIndex + 1 : 0;
+		setItem(currentGroup, next);
+	}, [activeIndex, itemCount, currentGroup, setItem]);
 
 	const moveUp = useCallback(() => {
-		setActiveIndex((prev) => {
-			if (prev >= 0) return prev - 1;
-			return itemCount - 1;
-		});
-	}, []);
+		const prev = activeIndex >= 0 ? activeIndex - 1 : itemCount - 1;
+		setItem(currentGroup, prev);
+	}, [activeIndex, itemCount, currentGroup, setItem]);
 
 	const moveLeft = useCallback(() => {
-		setActiveIndex((prev) => {
-			if (prev === -1) {
-				onPrevCategory?.();
-			}
-			return prev;
-		});
-	}, [onPrevCategory]);
+		if (activeIndex === -1 && groups.length > 0) {
+			const currentIndex = groups.indexOf(currentGroup);
+			const prevIndex = (currentIndex - 1 + groups.length) % groups.length;
+			setItem(groups[prevIndex]!, 0);
+		}
+	}, [activeIndex, currentGroup, groups, setItem]);
 
 	const moveRight = useCallback(() => {
-		setActiveIndex((prev) => {
-			if (prev === -1) {
-				onNextCategory?.();
-			}
-			return prev;
-		});
-	}, [onNextCategory]);
+		if (activeIndex === -1 && groups.length > 0) {
+			const currentIndex = groups.indexOf(currentGroup);
+			const nextIndex = (currentIndex + 1) % groups.length;
+			setItem(groups[nextIndex]!, 0);
+		}
+	}, [activeIndex, currentGroup, groups, setItem]);
 
 	const activateCurrent = useCallback(() => {
-		setActiveIndex((prev) => {
-			if (prev >= 0) {
-				onActivate?.(prev);
-			} else if (prev === -1) {
-				// Pressing Enter/Select on header drops focus to item 0
-				return 0;
-			}
-			return prev;
-		});
-	}, [onActivate]);
+		if (activeIndex >= 0) {
+			onActivate?.(activeIndex);
+		} else if (activeIndex === -1) {
+			// Pressing Enter/Select on header drops focus to item 0
+			setItem(currentGroup, 0);
+		}
+	}, [activeIndex, currentGroup, onActivate, setItem]);
 
 	// Dev-only fallback keyboard listener when testing in standard web browser
 	useEffect(() => {
@@ -94,24 +90,34 @@ export function useRovingFocus({
 					break;
 				case 'Tab':
 					e.preventDefault();
-					setActiveIndex(-1);
+					setItem(currentGroup, -1);
 					break;
 				default:
-					console.log('[DEV] Unknown key', e.key);
+					break;
 			}
 		};
 
 		window.addEventListener('keydown', handleKeyDown);
 		return () => window.removeEventListener('keydown', handleKeyDown);
-	}, [moveDown, moveUp, moveLeft, moveRight, activateCurrent]);
+	}, [
+		moveDown,
+		moveUp,
+		moveLeft,
+		moveRight,
+		activateCurrent,
+		currentGroup,
+		setItem,
+		disabled,
+	]);
 
 	return {
+		activeGroup: currentGroup,
 		activeIndex,
 		moveDown,
 		moveUp,
 		moveLeft,
 		moveRight,
 		activateCurrent,
-		resetFocus: () => setActiveIndex(-1),
+		resetFocus: () => setItem(currentGroup, -1),
 	};
 }
