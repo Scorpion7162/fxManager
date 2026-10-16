@@ -76,3 +76,17 @@ export function setQuickMenuVisible(visible: boolean) {
 		stopQuickMenuNavigation();
 	}
 }
+
+/** Used to update the F6/Quickmenu indicators for active features */
+export function updateMenuStore(
+	key: 'no-clip' | 'tags' | 'blips',
+	state: boolean,
+) {
+	SendNUIMessage({
+		action: 'menustore-update',
+		data: {
+			key,
+			state,
+		},
+	});
+}

@@ -13,6 +13,7 @@ import { UserPermissions } from '@fxmanager/shared/constants';
 import { fetchNui } from './utils/fetchNui';
 import { useHotkey } from './hooks/useHotKey';
 import { useMenuStore } from './store/menustore';
+import { useMenuSync } from './hooks/useMenuSync';
 
 type Mode = 'quick' | 'panel' | null;
 
@@ -39,6 +40,7 @@ export default function App() {
 	});
 
 	useNotificationEvents();
+	useMenuSync();
 
 	useEffect(() => {
 		fetchNui('nuiloaded');
