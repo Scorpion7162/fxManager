@@ -165,6 +165,7 @@ export function QuickMenu({ onClose, permissions }: QuickMenuProps) {
 			icon: Tags,
 			checked: tags,
 			onChange: (next) => {
+				fetchNui('moderation-tags', next);
 				setTags(next);
 				showNotification({
 					title: next ? 'Player names enabled' : 'Player names disabled',
@@ -181,6 +182,7 @@ export function QuickMenu({ onClose, permissions }: QuickMenuProps) {
 			icon: Radar,
 			checked: blips,
 			onChange: (next) => {
+				fetchNui('moderation-blips', next);
 				setBlips(next);
 				showNotification({
 					title: next ? 'Player blips enabled' : 'Player blips disabled',

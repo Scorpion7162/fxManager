@@ -110,7 +110,11 @@ ServerCallbacks.register<SpawnVehiclePayload, VehicleActionResult>(
 		let occupants: OccupantSeat[] = [];
 
 		if (oldVehicle && oldVehicle > 0) {
-			const [vx, vy, vz] = GetEntityVelocity(oldVehicle) as [number, number, number];
+			const [vx, vy, vz] = GetEntityVelocity(oldVehicle) as [
+				number,
+				number,
+				number,
+			];
 			oldVelocity = { x: vx, y: vy, z: vz };
 			// record occupants before the entity is deleted, they cannot be inspected after
 			occupants = collectOccupants(oldVehicle);
@@ -210,7 +214,6 @@ ServerCallbacks.register<DeleteVehiclePayload, VehicleActionResult>(
 		}
 
 		DeleteEntity(vehicle);
-
 
 		return { success: true, message: 'Vehicle deleted' };
 	},

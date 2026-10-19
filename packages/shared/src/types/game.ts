@@ -38,6 +38,11 @@ type VectorArray = [number, number, number];
 /** struct: key: serverid - value: [health, ping, coords] */
 export type PlayerUpdatePackage = Record<string, [number, number, VectorArray]>;
 
+export type ClientPlayerBlipUpdate = Record<
+	string,
+	{ username: string; coords: VectorArray }
+>;
+
 export interface ResourceData {
 	name: string;
 	version: string | null;

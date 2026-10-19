@@ -10,12 +10,7 @@
  * txAdmin is MIT licensed, Copyright (c) André Tabarra
  * https://github.com/tabarra
  */
-import {
-	Game,
-	Model,
-	Vehicle,
-	VehicleClass,
-} from '@nativewrappers/fivem';
+import { Game, Model, Vehicle, VehicleClass } from '@nativewrappers/fivem';
 import { CALLBACK_NAMES, EVENT_NAMES } from '@common/types';
 import { sleep } from '@common/utils';
 import { ClientCallbacks } from '../../utils/callbacks';

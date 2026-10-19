@@ -32,7 +32,7 @@ export const EVENT_NAMES = {
 	S2C_VEHICLE_SEAT: 'fxmanager:s2c:vehicle:seat',
 
 	/** server -> client update event for updating the data of currently connected players */
-	S2C_UPDATE_PLAYERS: 'fxmanager:s2c:monitoring:update'
+	S2C_UPDATE_PLAYERS: 'fxmanager:s2c:monitoring:update',
 } as const;
 
 /** callback names registered on the server and triggered by the client */
@@ -45,6 +45,7 @@ export const CALLBACK_NAMES = {
 	SPAWN_VEHICLE: 'spawn-vehicle',
 	FIX_VEHICLE: 'fix-vehicle',
 	DELETE_VEHICLE: 'delete-vehicle',
+	TOGGLE_BLIPS: 'toggle-blips',
 } as const;
 
 /** bare NUI callback action used for the SendNUIMessage permissions push */

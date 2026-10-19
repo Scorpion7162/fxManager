@@ -1,4 +1,7 @@
-import type { PlayerUpdatePackage } from '@fxmanager/shared/types';
+import type {
+	ClientPlayerBlipUpdate,
+	PlayerUpdatePackage,
+} from '@fxmanager/shared/types';
 import { QueryManager } from '../utils/query';
 import { getPermissions } from '../utils/permissions';
 import { EVENT_NAMES, type UserPermissionKey } from '@common/types';
@@ -96,14 +99,22 @@ class PlayerManager {
 	private startUpdates() {
 		this.updateInterval = setInterval(async () => {
 			const updatePacket: PlayerUpdatePackage = {};
+			const clientUpdatePacket: ClientPlayerBlipUpdate = {};
 
 			for (const src of this.players.keys()) {
 				const ped = GetPlayerPed(src);
+				if (ped <= 0) continue; // sanity check
+
 				const health = GetEntityHealth(ped);
 				const ping = GetPlayerPing(src);
 				const coords = Vector3.fromArray(GetEntityCoords(ped));
+				const coordsArray = coords.toArray();
 
-				updatePacket[src] = [health, ping, coords.toArray()];
+				updatePacket[src] = [health, ping, coordsArray];
+				clientUpdatePacket[src] = {
+					username: GetPlayerName(src),
+					coords: coordsArray,
+				};
 
 				this.updatePlayerPed(src, ped);
 				this.updatePlayerCoords(src, coords);
@@ -112,10 +123,8 @@ class PlayerManager {
 			if (Object.keys(updatePacket).length === 0)
 				return console.warn('NO DATA FOR UPDATE INTERVAL');
 
-			const adminPlayers = this.getPlayers({ permission: 'PLAYER_MONITORING' });
-
-			adminPlayers.forEach((src) => {
-				emitNet(EVENT_NAMES.S2C_UPDATE_PLAYERS, src, updatePacket);
+			this.getPlayers({ permission: 'PLAYER_MONITORING' }).forEach((src) => {
+				emitNet(EVENT_NAMES.S2C_UPDATE_PLAYERS, src, clientUpdatePacket);
 			});
 
 			await QueryManager({
