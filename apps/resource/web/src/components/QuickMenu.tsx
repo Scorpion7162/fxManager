@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@fxmanager/ui/components/button';
 import {
 	MapPin,
@@ -75,13 +75,16 @@ export function QuickMenu({ onClose, permissions }: QuickMenuProps) {
 	}, []);
 
 	// Cleanup effect: Ensure NUI focus is released if QuickMenu unmounts while a dialog is open
+	const activeDialogRef = useRef(activeDialog);
+	activeDialogRef.current = activeDialog;
+
 	useEffect(() => {
 		return () => {
-			if (activeDialog !== null) {
+			if (activeDialogRef.current !== null) {
 				fetchNui('setDialogFocus', { open: false }).catch(() => {});
 			}
 		};
-	}, [activeDialog]);
+	}, []);
 
 	const handleNoclipToggle = useCallback((targetState: boolean) => {
 		if (isEnvBrowser()) return setNoclip(targetState);
