@@ -38,7 +38,7 @@ export function useRovingFocus({
 		if (activeIndex === -1 && groups.length > 0) {
 			const currentIndex = groups.indexOf(currentGroup);
 			const prevIndex = (currentIndex - 1 + groups.length) % groups.length;
-			setItem(groups[prevIndex]!, 0);
+			setItem(groups[prevIndex]!, -1);
 		}
 	}, [activeIndex, currentGroup, groups, setItem]);
 
@@ -46,7 +46,7 @@ export function useRovingFocus({
 		if (activeIndex === -1 && groups.length > 0) {
 			const currentIndex = groups.indexOf(currentGroup);
 			const nextIndex = (currentIndex + 1) % groups.length;
-			setItem(groups[nextIndex]!, 0);
+			setItem(groups[nextIndex]!, -1);
 		}
 	}, [activeIndex, currentGroup, groups, setItem]);
 
