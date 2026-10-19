@@ -301,11 +301,21 @@ export function QuickMenu({ onClose, permissions }: QuickMenuProps) {
 					],
 					confirmLabel: 'Spawn',
 					onConfirm: (model) => {
-						console.log('Spawning vehicle:', model);
-						showNotification({
-							title: 'Vehicle spawned',
-							description: model,
-							variant: 'success',
+						fetchNui<{ success: boolean; message?: string }>('spawn-vehicle', {
+							model: model.toLowerCase(),
+						}).then(({ success, message }) => {
+							if (!success)
+								showNotification({
+									title: 'Unable to spawn vehicle',
+									description: message,
+									variant: 'error',
+								});
+							else
+								showNotification({
+									title: message ?? 'Vehicle spawned',
+									description: model,
+									variant: 'success',
+								});
 						});
 					},
 				});
@@ -317,10 +327,23 @@ export function QuickMenu({ onClose, permissions }: QuickMenuProps) {
 			group: 'Vehicle',
 			label: 'Fix vehicle',
 			icon: Wrench,
-			onSelect: () => {
-				console.log('fix vehicle');
-				showNotification({ title: 'Vehicle repaired', variant: 'success' });
-			},
+			onSelect: () =>
+				fetchNui<{ success: boolean; message?: string }>(
+					'fix-vehicle',
+					null,
+				).then(({ success, message }) => {
+					if (!success)
+						showNotification({
+							title: 'Unable to fix vehicle',
+							description: message,
+							variant: 'error',
+						});
+					else
+						showNotification({
+							title: message ?? 'Vehicle repaired',
+							variant: 'success',
+						});
+				}),
 		},
 		{
 			type: 'button',
@@ -329,10 +352,23 @@ export function QuickMenu({ onClose, permissions }: QuickMenuProps) {
 			label: 'Delete vehicle',
 			icon: Trash2,
 			variant: 'destructive',
-			onSelect: () => {
-				console.log('delete vehicle');
-				showNotification({ title: 'Vehicle deleted', variant: 'warning' });
-			},
+			onSelect: () =>
+				fetchNui<{ success: boolean; message?: string }>(
+					'delete-vehicle',
+					null,
+				).then(({ success, message }) => {
+					if (!success)
+						showNotification({
+							title: 'Unable to delete vehicle',
+							description: message,
+							variant: 'error',
+						});
+					else
+						showNotification({
+							title: message ?? 'Vehicle deleted',
+							variant: 'warning',
+						});
+				}),
 		},
 	];
 
