@@ -2,6 +2,7 @@ import { Game } from '@nativewrappers/fivem';
 import { CALLBACK_NAMES, EVENT_NAMES } from '@common/types';
 import { ClientCallbacks } from '../../utils/callbacks';
 import { NuiCallback } from '../../utils/nui-callbacks';
+import { notify } from '../notifications';
 
 interface HealTargetPayload {
 	target: number | 'all' | 'self';
@@ -13,7 +14,7 @@ interface HealTargetResponse {
 	error?: string;
 }
 
-function heal() {
+function heal(showNotification: boolean = true) {
 	const playerPed = Game.PlayerPed;
 
 	if (playerPed.IsDead) {
@@ -24,6 +25,10 @@ function heal() {
 
 	playerPed.resurrect();
 	playerPed.clearBloodDamage();
+
+	if (!showNotification) return;
+
+	notify({ title: "You've been healed", variant: 'info' });
 }
 
 NuiCallback<HealTargetPayload>('heal-target', async ({ target }, reply) => {
@@ -42,7 +47,7 @@ NuiCallback<HealTargetPayload>('heal-target', async ({ target }, reply) => {
 			message: response.error ?? 'Unable to heal target',
 		});
 
-	if (target === 'self') heal();
+	if (target === 'self') heal(false);
 
 	reply({ success: true, message: 'Player healed' });
 });
