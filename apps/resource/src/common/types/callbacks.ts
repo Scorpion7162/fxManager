@@ -27,6 +27,9 @@ export const EVENT_NAMES = {
 
 	/** server -> client command telling the receiving player to heal themselves */
 	S2C_HEAL: 'fxmanager:s2c:player:heal',
+
+	/** server -> client command telling the receiving player to seat into a spawned vehicle */
+	S2C_VEHICLE_SEAT: 'fxmanager:s2c:vehicle:seat',
 } as const;
 
 /** callback names registered on the server and triggered by the client */
@@ -36,6 +39,9 @@ export const CALLBACK_NAMES = {
 	TOGGLE_NOCLIP: 'toggle-noclip',
 	TELEPORT_COORDS: 'teleport-coords',
 	HEAL_TARGET: 'heal-target',
+	SPAWN_VEHICLE: 'spawn-vehicle',
+	FIX_VEHICLE: 'fix-vehicle',
+	DELETE_VEHICLE: 'delete-vehicle',
 } as const;
 
 /** bare NUI callback action used for the SendNUIMessage permissions push */

@@ -33,6 +33,7 @@ export const UserPermissions = {
 	NOCLIP: 1 << 20, // - game permission
 	TELEPORT: 1 << 21, // - game permission
 	HEAL_PLAYERS: 1 << 22, // - game permission
+	VEHICLE_MANAGEMENT: 1 << 23, // - game permission
 
 	MASTER: 1 << 30, // 1073741824
 } as const;
@@ -65,6 +66,7 @@ export const PERMISSION_ACE_KEYS: Record<number, string> = {
 	[UserPermissions.NOCLIP]: 'game.noclip',
 	[UserPermissions.TELEPORT]: 'game.teleport',
 	[UserPermissions.HEAL_PLAYERS]: 'game.heal',
+	[UserPermissions.VEHICLE_MANAGEMENT]: 'game.vehicle',
 };
 
 export const PERMISSION_LABELS: Record<
@@ -189,6 +191,11 @@ export const PERMISSION_LABELS: Record<
 	[UserPermissions.HEAL_PLAYERS]: {
 		label: 'Heal Players',
 		desc: 'Heal players in-game.',
+		category: 'Game',
+	},
+	[UserPermissions.VEHICLE_MANAGEMENT]: {
+		label: 'Vehicle Management',
+		desc: 'Spawn, fix and delete in-game vehicles.',
 		category: 'Game',
 	},
 };
