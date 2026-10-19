@@ -24,6 +24,9 @@ export const EVENT_NAMES = {
 
 	/** server -> client push of a notification payload for the player's NUI */
 	S2C_NOTIFICATION: 'fxmanager:s2c:notification',
+
+	/** server -> client command telling the receiving player to heal themselves */
+	S2C_HEAL: 'fxmanager:s2c:player:heal',
 } as const;
 
 /** callback names registered on the server and triggered by the client */
@@ -32,6 +35,7 @@ export const CALLBACK_NAMES = {
 	GET_PERMISSIONS: 'get-permissions',
 	TOGGLE_NOCLIP: 'toggle-noclip',
 	TELEPORT_COORDS: 'teleport-coords',
+	HEAL_TARGET: 'heal-target',
 } as const;
 
 /** bare NUI callback action used for the SendNUIMessage permissions push */

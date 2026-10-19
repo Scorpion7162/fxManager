@@ -32,6 +32,7 @@ export const UserPermissions = {
 
 	NOCLIP: 1 << 20, // - game permission
 	TELEPORT: 1 << 21, // - game permission
+	HEAL_PLAYERS: 1 << 22, // - game permission
 
 	MASTER: 1 << 30, // 1073741824
 } as const;
@@ -63,6 +64,7 @@ export const PERMISSION_ACE_KEYS: Record<number, string> = {
 	[UserPermissions.CONFIG_EDITOR]: 'server.cfg_editor',
 	[UserPermissions.NOCLIP]: 'game.noclip',
 	[UserPermissions.TELEPORT]: 'game.teleport',
+	[UserPermissions.HEAL_PLAYERS]: 'game.heal',
 };
 
 export const PERMISSION_LABELS: Record<
@@ -182,6 +184,11 @@ export const PERMISSION_LABELS: Record<
 	[UserPermissions.TELEPORT]: {
 		label: 'Teleport',
 		desc: 'Teleport to coordinates, map markers, to players.',
+		category: 'Game',
+	},
+	[UserPermissions.HEAL_PLAYERS]: {
+		label: 'Heal Players',
+		desc: 'Heal players in-game.',
 		category: 'Game',
 	},
 };

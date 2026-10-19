@@ -1,3 +1,4 @@
+import './health';
 import './movement';
-import './nui';
 import './notifications';
+import './nui';
