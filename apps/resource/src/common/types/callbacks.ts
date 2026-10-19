@@ -30,6 +30,9 @@ export const EVENT_NAMES = {
 
 	/** server -> client command telling the receiving player to seat into a spawned vehicle */
 	S2C_VEHICLE_SEAT: 'fxmanager:s2c:vehicle:seat',
+
+	/** server -> client update event for updating the data of currently connected players */
+	S2C_UPDATE_PLAYERS: 'fxmanager:s2c:monitoring:update'
 } as const;
 
 /** callback names registered on the server and triggered by the client */

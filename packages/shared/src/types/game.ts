@@ -34,8 +34,9 @@ export interface OnlinePlayer extends Player {
 	health: number;
 }
 
-/** struct: key: serverid - value: [health, ping] */
-export type PlayerUpdatePackage = Record<string, [number, number]>;
+type VectorArray = [number, number, number];
+/** struct: key: serverid - value: [health, ping, coords] */
+export type PlayerUpdatePackage = Record<string, [number, number, VectorArray]>;
 
 export interface ResourceData {
 	name: string;

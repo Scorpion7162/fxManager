@@ -34,6 +34,7 @@ export const UserPermissions = {
 	TELEPORT: 1 << 21, // - game permission
 	HEAL_PLAYERS: 1 << 22, // - game permission
 	VEHICLE_MANAGEMENT: 1 << 23, // - game permission
+	PLAYER_MONITORING: 1 << 24, // - game permission
 
 	MASTER: 1 << 30, // 1073741824
 } as const;
@@ -67,6 +68,7 @@ export const PERMISSION_ACE_KEYS: Record<number, string> = {
 	[UserPermissions.TELEPORT]: 'game.teleport',
 	[UserPermissions.HEAL_PLAYERS]: 'game.heal',
 	[UserPermissions.VEHICLE_MANAGEMENT]: 'game.vehicle',
+	[UserPermissions.PLAYER_MONITORING]: 'game.players',
 };
 
 export const PERMISSION_LABELS: Record<
@@ -198,4 +200,9 @@ export const PERMISSION_LABELS: Record<
 		desc: 'Spawn, fix and delete in-game vehicles.',
 		category: 'Game',
 	},
+	[UserPermissions.PLAYER_MONITORING]: {
+		label: 'Player Monitoring',
+		desc: 'Ability to monitor players in-game.',
+		category: 'Game'
+	}
 };

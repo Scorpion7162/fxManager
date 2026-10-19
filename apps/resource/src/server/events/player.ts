@@ -115,6 +115,11 @@ on('playerJoining', async () => {
 	}
 });
 
+on('playerJoined', async () => {
+	const src = source;
+	playerManager.updatePlayerPed(src);
+});
+
 on(
 	'playerDropped',
 	async (reason: string, resourceName: string, category: number) => {

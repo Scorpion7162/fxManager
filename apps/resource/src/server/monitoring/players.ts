@@ -1,18 +1,25 @@
 import type { PlayerUpdatePackage } from '@fxmanager/shared/types';
 import { QueryManager } from '../utils/query';
 import { getPermissions } from '../utils/permissions';
-import type { UserPermissionKey } from '@common/types';
+import { EVENT_NAMES, type UserPermissionKey } from '@common/types';
 import { PermissionManager } from '@fxmanager/shared/utils';
 import { UserPermissions } from '@fxmanager/shared/constants';
 import { IsInDevelopment } from '@common/utils';
+import { Vector3 } from '@nativewrappers/fivem';
 
 export interface PlayerFilter {
 	/** only return sources holding this permission (master admins always match) */
 	permission?: UserPermissionKey;
 }
 
+export interface TrackedPlayer {
+	permissions: number;
+	ped?: number;
+	coords?: Vector3;
+}
+
 class PlayerManager {
-	private players: Map<string, { permissions: number }> = new Map();
+	private players: Map<string, TrackedPlayer> = new Map();
 	private updateInterval: NodeJS.Timeout | null = null;
 
 	addPlayer(source: number) {
@@ -25,6 +32,27 @@ class PlayerManager {
 	removePlayer(source: number) {
 		this.players.delete(`${source}`);
 		if (this.players.size === 0) this.clearUpdates();
+	}
+
+	updatePlayerPed(source: number | string, ped?: number) {
+		source = typeof source === 'string' ? source : String(source);
+
+		const player = this.getPlayer(source);
+		if (!player) return;
+
+		ped = ped ?? GetPlayerPed(source);
+		if (ped <= 0) return;
+
+		player.ped = ped;
+	}
+
+	updatePlayerCoords(source: number | string, coords?: Vector3) {
+		source = typeof source === 'string' ? source : String(source);
+
+		const player = this.getPlayer(source);
+		if (!player?.ped) return;
+
+		player.coords = coords ?? Vector3.fromArray(GetEntityCoords(player.ped));
 	}
 
 	dropAll(reason: string): number {
@@ -73,12 +101,22 @@ class PlayerManager {
 				const ped = GetPlayerPed(src);
 				const health = GetEntityHealth(ped);
 				const ping = GetPlayerPing(src);
+				const coords = Vector3.fromArray(GetEntityCoords(ped));
 
-				updatePacket[src] = [health, ping];
+				updatePacket[src] = [health, ping, coords.toArray()];
+
+				this.updatePlayerPed(src, ped);
+				this.updatePlayerCoords(src, coords);
 			}
 
 			if (Object.keys(updatePacket).length === 0)
 				return console.warn('NO DATA FOR UPDATE INTERVAL');
+
+			const adminPlayers = this.getPlayers({ permission: 'PLAYER_MONITORING' });
+
+			adminPlayers.forEach((src) => {
+				emitNet(EVENT_NAMES.S2C_UPDATE_PLAYERS, src, updatePacket);
+			});
 
 			await QueryManager({
 				endpoint: '/players/update',
