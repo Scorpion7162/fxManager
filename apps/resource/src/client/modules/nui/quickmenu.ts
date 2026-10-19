@@ -39,7 +39,7 @@ function startQuickMenuNavigation() {
 			for (const { control, direction } of NAV_CONTROLS) {
 				DisableControlAction(0, control, true);
 
-				if (IsDisabledControlJustPressed(0, control)) {
+				if (IsDisabledControlJustReleased(0, control)) {
 					sendNav(direction);
 
 					// sleep to avoid detecting long press as multiple presses
