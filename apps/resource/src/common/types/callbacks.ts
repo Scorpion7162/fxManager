@@ -1,4 +1,4 @@
-import { UserPermissions } from '@fxmanager/shared/constants';
+import type { UserPermissions } from '@fxmanager/shared/constants';
 
 export interface CallbackPayload<T = unknown> {
 	requestId: string;

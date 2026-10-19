@@ -4,7 +4,7 @@ import {
 	Vector3,
 	Control,
 	GameplayCamera,
-	Entity,
+	type Entity,
 	Vehicle,
 } from '@nativewrappers/fivem';
 import { permissions } from '../../utils/permissions';

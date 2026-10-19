@@ -1,4 +1,8 @@
-import { CallbackPayload, CallbackResponse, EVENT_NAMES } from '@common/types';
+import {
+	type CallbackPayload,
+	type CallbackResponse,
+	EVENT_NAMES,
+} from '@common/types';
 
 type ClientCallbackHandler<TInput, TOutput> = (
 	data: TInput,
