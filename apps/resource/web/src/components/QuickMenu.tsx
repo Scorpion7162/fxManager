@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Button } from '@fxmanager/ui/components/button';
-import { Switch } from '@fxmanager/ui/components/switch';
 import {
 	MapPin,
 	Wind,
@@ -193,7 +192,22 @@ export function QuickMenu({ onClose, permissions }: QuickMenuProps) {
 			group: 'Medical',
 			label: 'Heal self',
 			icon: HeartPulse,
-			onSelect: () => console.log('healed self'),
+			onSelect: () =>
+				fetchNui<{ success: boolean; message: string }>('heal-target', {
+					target: 'self',
+				}).then(({ success, message }) => {
+					if (!success)
+						showNotification({
+							title: 'Unable to heal self',
+							description: message,
+							variant: 'error',
+						});
+					else
+						showNotification({
+							title: message,
+							variant: 'success',
+						});
+				}),
 		},
 		{
 			type: 'button',
@@ -209,12 +223,31 @@ export function QuickMenu({ onClose, permissions }: QuickMenuProps) {
 					// Regex for numeric Server IDs
 					pattern: /^\d+$/,
 					errorMessage: 'Must be a valid numeric Server ID',
-					onConfirm: (serverId) => {
-						console.log('Healing player ID:', serverId);
-						showNotification({
-							title: 'Heal sent',
-							description: `Server ID: ${serverId}`,
-							variant: 'success',
+					onConfirm: (rawServerId) => {
+						const serverId = parseInt(rawServerId, 10);
+
+						if (!serverId || serverId < 1) {
+							return showNotification({
+								title: 'Invalid server id',
+								description: 'Server IDs are positive integers',
+								variant: 'error',
+							});
+						}
+
+						fetchNui<{ success: boolean; message: string }>('heal-target', {
+							target: serverId,
+						}).then(({ success, message }) => {
+							if (!success)
+								showNotification({
+									title: 'Unable to heal player',
+									description: message,
+									variant: 'error',
+								});
+							else
+								showNotification({
+									title: message,
+									variant: 'success',
+								});
 						});
 					},
 				});
@@ -226,7 +259,22 @@ export function QuickMenu({ onClose, permissions }: QuickMenuProps) {
 			group: 'Medical',
 			label: 'Heal all',
 			icon: HeartPulse,
-			onSelect: () => console.log('heal all'),
+			onSelect: () =>
+				fetchNui<{ success: boolean; message: string }>('heal-target', {
+					target: 'all',
+				}).then(({ success, message }) => {
+					if (!success)
+						showNotification({
+							title: 'Unable to heal all',
+							description: message,
+							variant: 'error',
+						});
+					else
+						showNotification({
+							title: message,
+							variant: 'success',
+						});
+				}),
 		},
 		{
 			type: 'button',
