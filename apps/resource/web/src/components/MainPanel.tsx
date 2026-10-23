@@ -1,9 +1,9 @@
 import { useEffect, useState, type ComponentType } from 'react';
 import { SECTIONS, type SectionKey } from '~/config/sections';
-import { ConsoleSection } from './sections/ConsoleSection';
-import { ResourcesSection } from './sections/ResourcesSection';
-import { PlayersSection } from './sections/PlayersSection';
-import { ReportsSection } from './sections/ReportsSection';
+import { ConsoleSection } from './panel/ConsoleSection';
+import { ResourcesSection } from './panel/ResourcesSection';
+import { PlayersSection } from './panel/PlayersSection';
+import { ReportsSection } from './panel/ReportsSection';
 import { Server } from 'lucide-react';
 import { PermissionManager } from '@fxmanager/shared/utils';
 
