@@ -4,6 +4,7 @@ import {
 	Blip,
 	type BlipColor,
 	BlipSprite,
+	Game,
 	Vector3,
 } from '@nativewrappers/fivem';
 import { NuiCallback } from '../../utils/nui-callbacks';
@@ -47,6 +48,8 @@ class BlipManager {
 		}
 
 		for (const [source, player] of Object.entries(this.playerUpdates)) {
+			if (source === String(Game.Player.ServerId)) continue;
+
 			const position = Vector3.fromArray(player.coords);
 			let blip = this.blips.get(source);
 
@@ -64,7 +67,6 @@ class BlipManager {
 export const blipManager = new BlipManager();
 
 onNet(EVENT_NAMES.S2C_UPDATE_PLAYERS, (payload: ClientPlayerBlipUpdate) => {
-	console.log('update');
 	blipManager.updatePlayerData(payload);
 
 	if (blipManager.enabled) blipManager.syncBlips();
