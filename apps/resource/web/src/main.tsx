@@ -3,11 +3,14 @@ import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import { isEnvBrowser } from './utils/misc.ts';
 import './index.css';
+import { TooltipProvider } from '@fxmanager/ui/components/tooltip';
 
 // biome-ignore lint/style/noNonNullAssertion: conventional method
 ReactDOM.createRoot(document.getElementById('root')!).render(
 	<React.StrictMode>
-		<App />
+		<TooltipProvider>
+			<App />
+		</TooltipProvider>
 	</React.StrictMode>,
 );
 

@@ -1,6 +1,7 @@
 import { NuiCallback } from '../../utils/nui-callbacks';
 import { permissions } from '../../utils/permissions';
 import { setQuickMenuVisible } from './quickmenu';
+import './resources';
 
 enum UIState {
 	Closed,

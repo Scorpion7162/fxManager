@@ -1,1 +1,2 @@
 import './permissions';
+import './resources';

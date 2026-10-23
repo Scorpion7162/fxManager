@@ -1,4 +1,5 @@
 import type { UserPermissions } from '@fxmanager/shared/constants';
+import type { ResourceData } from '@fxmanager/shared/types';
 
 export interface CallbackPayload<T = unknown> {
 	requestId: string;
@@ -41,6 +42,10 @@ export const CALLBACK_NAMES = {
 	GET_PERMISSIONS: 'get-permissions',
 	TOGGLE_NOCLIP: 'toggle-noclip',
 	TELEPORT_COORDS: 'teleport-coords',
+	/** fetch the full resource list of the running server */
+	LIST_RESOURCES: 'list-resources',
+	/** start or stop a single resource on the server */
+	RESOURCE_ACTION: 'resource-action',
 	HEAL_TARGET: 'heal-target',
 	SPAWN_VEHICLE: 'spawn-vehicle',
 	FIX_VEHICLE: 'fix-vehicle',
@@ -54,6 +59,15 @@ export const NUI_PERMISSIONS_EVENT = 'permissions';
 export interface PermissionSnapshot {
 	/** raw UserPermissions bitfield, see @fxmanager/shared/constants */
 	permissions: number;
+}
+
+export interface ResourcesSnapshotReply {
+	return: boolean;
+	resources: ResourceData[];
+}
+
+export interface ResourceActionReply {
+	return: boolean;
 }
 
 export type UserPermissionKey = keyof typeof UserPermissions;
