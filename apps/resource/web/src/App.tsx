@@ -64,7 +64,7 @@ export default function App() {
 			{mode === 'panel' && (
 				<MainPanel permissions={permissions} onClose={() => setMode(null)} />
 			)}
-			<NoclipControls visible={isEnvBrowser() || noclipEnabled} />
+			<NoclipControls visible={(isEnvBrowser() && mode === 'quick') || noclipEnabled} />
 			{/* notifications render on top of everything, menu or panel open or closed */}
 			<NotificationViewport />
 			{isEnvBrowser() && <DevTools />}
