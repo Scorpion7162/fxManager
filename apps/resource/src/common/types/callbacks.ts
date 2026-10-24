@@ -56,6 +56,50 @@ export const CALLBACK_NAMES = {
 /** bare NUI callback action used for the SendNUIMessage permissions push */
 export const NUI_PERMISSIONS_EVENT = 'permissions';
 
+/** SendNUIMessage action pushing a full dashboard snapshot to the NUI */
+export const NUI_DASHBOARD_UPDATE_EVENT = 'dashboard';
+
+/** NUI callback the dashboard calls once to receive the initial snapshot and open the update feed */
+export const NUI_DASHBOARD_SUBSCRIBE = 'subscribe-dashboard';
+
+// region dashboard snapshot payload (client runtime -> NUI)
+/** stats strip on the dashboard; live values once a push is wired server-side */
+export interface NuiDashboardStats {
+	players: number;
+	capacity: number;
+	admins: number;
+}
+
+/** single connected player for the dashboard list */
+export interface NuiDashboardPlayer {
+	serverId: number;
+	name: string;
+	/** reports/monitoring staff flag (bitfield check server-side) */
+	staff?: boolean;
+	/** server ping in ms, absent until the first monitor tick provides it */
+	ping?: number;
+	/** connected duration in ms */
+	duration: number;
+}
+
+/** single active report ticket for the dashboard recap */
+export interface NuiDashboardReport {
+	id: number;
+	subject: string;
+	/** count of unseen follow-up messages on the ticket */
+	unread: number;
+	/** pre-formatted relative age, e.g. "12m" */
+	age: string;
+}
+
+/** full dashboard snapshot; sent on join and whenever any piece changes */
+export interface NuiDashboardPayload {
+	stats: NuiDashboardStats;
+	players: NuiDashboardPlayer[];
+	reports: NuiDashboardReport[];
+}
+// endregion
+
 export interface PermissionSnapshot {
 	/** raw UserPermissions bitfield, see @fxmanager/shared/constants */
 	permissions: number;

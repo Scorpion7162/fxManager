@@ -5,11 +5,17 @@ import {
 	Users,
 	FileBarChart,
 	type LucideIcon,
+	Activity,
 } from 'lucide-react';
 
 /* Basically all mock stuff, just placeholder */
 
-export type SectionKey = 'console' | 'resources' | 'players' | 'reports';
+export type SectionKey =
+	| 'dashboard'
+	| 'console'
+	| 'resources'
+	| 'players'
+	| 'reports';
 
 export interface SectionConfig {
 	key: SectionKey;
@@ -22,6 +28,12 @@ export interface SectionConfig {
 // Single source of truth for what exists in the main panel and who can open it.
 // Adding a new section = adding a row here + a view component, nothing else.
 export const SECTIONS: SectionConfig[] = [
+	{
+		key: 'dashboard',
+		label: 'Dashboard',
+		icon: Activity,
+		permission: UserPermissions.NONE,
+	},
 	{
 		key: 'players',
 		label: 'Players',

@@ -4,10 +4,12 @@ import { ConsoleSection } from './panel/ConsoleSection';
 import { ResourcesSection } from './panel/ResourcesSection';
 import { PlayersSection } from './panel/PlayersSection';
 import { ReportsSection } from './panel/ReportsSection';
+import { DashboardSection } from './panel/DashboardSection';
 import { Server } from 'lucide-react';
 import { PermissionManager } from '@fxmanager/shared/utils';
 
 const SECTION_VIEWS: Record<SectionKey, ComponentType> = {
+	dashboard: DashboardSection,
 	console: ConsoleSection,
 	resources: ResourcesSection,
 	players: PlayersSection,
