@@ -207,36 +207,42 @@ function DashboardSkeleton() {
 	return (
 		<div className="flex h-full flex-col gap-2">
 			{/* stat strip */}
-			<div className="grid h-fit grid-cols-3 gap-2">					<Card size="sm" className="bg-card/50 py-3">
-						<CardHeader className="flex flex-row items-center justify-start gap-2 px-3 py-0">
-							<User className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
-							<CardTitle className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80">
-								Players
-							</CardTitle>
-						</CardHeader>
-						<CardContent className="px-3 py-0">
-							<Skeleton className="mt-1 h-7 w-16 rounded-md bg-border/50" />
-						</CardContent>
-					</Card>
+			<div className="grid h-fit grid-cols-3 gap-2">
+				{' '}
+				<Card size="sm" className="bg-card/50 py-3">
+					<CardHeader className="flex flex-row items-center justify-start gap-2 px-3 py-0">
+						<User className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
+						<CardTitle className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80">
+							Players
+						</CardTitle>
+					</CardHeader>
+					<CardContent className="px-3 py-0">
+						<Skeleton className="mt-1 h-7 w-16 rounded-md bg-border/50" />
+					</CardContent>
+				</Card>
 				<Card size="sm" className="bg-card/50 py-3">
 					<CardHeader className="flex flex-row items-center justify-start gap-2 px-3 py-0">
 						<ClockIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
-						<CardTitle className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80">								Uptime
-							</CardTitle>
-						</CardHeader>
-						<CardContent className="px-3 py-0">
-							<Skeleton className="mt-1 h-7 w-12 rounded-md bg-border/50" />
-						</CardContent>
+						<CardTitle className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80">
+							{' '}
+							Uptime
+						</CardTitle>
+					</CardHeader>
+					<CardContent className="px-3 py-0">
+						<Skeleton className="mt-1 h-7 w-12 rounded-md bg-border/50" />
+					</CardContent>
 				</Card>
 				<Card size="sm" className="bg-card/50 py-3">
 					<CardHeader className="flex flex-row items-center justify-start gap-2 px-3 py-0">
 						<Shield className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
-						<CardTitle className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80">								Admins Online
-							</CardTitle>
-						</CardHeader>
-						<CardContent className="px-3 py-0">
-							<Skeleton className="mt-1 h-7 w-12 rounded-md bg-border/50" />
-						</CardContent>
+						<CardTitle className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80">
+							{' '}
+							Admins Online
+						</CardTitle>
+					</CardHeader>
+					<CardContent className="px-3 py-0">
+						<Skeleton className="mt-1 h-7 w-12 rounded-md bg-border/50" />
+					</CardContent>
 				</Card>
 			</div>
 
@@ -263,7 +269,10 @@ function DashboardSkeleton() {
 
 				{/* right column */}
 				<div className="flex col-span-2 min-h-0 flex-col gap-2">
-					<Card size="sm" className="bg-card/50 flex min-h-0 flex-1 flex-col py-4">
+					<Card
+						size="sm"
+						className="bg-card/50 flex min-h-0 flex-1 flex-col py-4"
+					>
 						<CardHeader className="flex flex-row items-center justify-start gap-2 px-3 py-0">
 							<Activity className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
 							<CardTitle className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80">
@@ -278,7 +287,10 @@ function DashboardSkeleton() {
 						</CardContent>
 					</Card>
 
-					<Card size="sm" className="bg-card/50 flex min-h-0 flex-1 flex-col py-4">
+					<Card
+						size="sm"
+						className="bg-card/50 flex min-h-0 flex-1 flex-col py-4"
+					>
 						<CardHeader className="flex flex-col gap-1 px-3 py-0">
 							<div className="flex w-full items-center justify-between gap-2">
 								<CardTitle className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80">

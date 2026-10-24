@@ -1,4 +1,8 @@
-import { CALLBACK_NAMES, type ResourceActionReply, type ResourcesSnapshotReply } from '@common/types';
+import {
+	CALLBACK_NAMES,
+	type ResourceActionReply,
+	type ResourcesSnapshotReply,
+} from '@common/types';
 import { ClientCallbacks } from '../../utils/callbacks';
 import { NuiCallback } from '../../utils/nui-callbacks';
 import { permissions } from '../../utils/permissions';

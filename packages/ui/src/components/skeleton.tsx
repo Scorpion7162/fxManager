@@ -1,6 +1,8 @@
+import type { HTMLAttributes } from 'react';
+
 import { cn } from '@fxmanager/ui/lib/utils';
 
-function Skeleton({ className, ...props }: React.ComponentProps<'div'>) {
+function Skeleton({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
 	return (
 		<div
 			data-slot="skeleton"
