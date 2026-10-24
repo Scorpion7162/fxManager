@@ -28,6 +28,7 @@ export interface TrackedPlayer {
 class PlayerManager {
 	private players: Map<string, TrackedPlayer> = new Map();
 	private updateInterval: NodeJS.Timeout | null = null;
+	private tickListeners = new Set<() => void>();
 
 	addPlayer(source: number) {
 		if (this.players.size === 0) this.startUpdates();
@@ -138,6 +139,21 @@ class PlayerManager {
 		return sources.filter((src) => this.isAllowed(src, permission));
 	}
 
+	/** capture the player's ped once it spawned (called on playerJoined) */
+	updatePlayerPed(source: number | string) {
+		const src = String(source);
+		const ped = GetPlayerPed(src);
+		if (ped > 0) this.updatePlayer(src, { ped });
+	}
+
+	/**
+	 * Register a listener fired at the end of every monitor tick
+	 */
+	onTick(listener: () => void): () => void {
+		this.tickListeners.add(listener);
+		return () => this.tickListeners.delete(listener);
+	}
+
 	private startUpdates() {
 		this.updateInterval = setInterval(async () => {
 			const updatePacket: PlayerUpdatePackage = {};
@@ -173,6 +189,8 @@ class PlayerManager {
 				method: 'POST',
 				body: { payload: updatePacket },
 			});
+
+			for (const listener of this.tickListeners) listener();
 		}, 5_000);
 	}
 
