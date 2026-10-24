@@ -16,9 +16,13 @@ export interface PlayerFilter {
 }
 
 export interface TrackedPlayer {
+	name: string;
+	staff: boolean;
 	permissions: number;
 	ped?: number;
 	coords?: Vector3;
+	ping?: number;
+	health?: number;
 }
 
 class PlayerManager {
@@ -28,8 +32,13 @@ class PlayerManager {
 	addPlayer(source: number) {
 		if (this.players.size === 0) this.startUpdates();
 
+		const name = GetPlayerName(String(source));
 		const permissions = getPermissions(source);
-		this.players.set(`${source}`, { permissions });
+		this.players.set(`${source}`, {
+			permissions,
+			name,
+			staff: permissions !== 0,
+		});
 	}
 
 	removePlayer(source: number) {
@@ -37,25 +46,58 @@ class PlayerManager {
 		if (this.players.size === 0) this.clearUpdates();
 	}
 
-	updatePlayerPed(source: number | string, ped?: number) {
+	updatePlayer(source: string | number, data: Partial<TrackedPlayer>) {
 		source = typeof source === 'string' ? source : String(source);
 
 		const player = this.getPlayer(source);
 		if (!player) return;
 
-		ped = ped ?? GetPlayerPed(source);
-		if (ped <= 0) return;
+		const updates: Partial<TrackedPlayer> = {};
 
-		player.ped = ped;
-	}
+		if (data.name !== undefined) {
+			if (typeof data.name === 'string' && data.name.trim().length > 0) {
+				updates.name = data.name.trim();
+			}
+		}
 
-	updatePlayerCoords(source: number | string, coords?: Vector3) {
-		source = typeof source === 'string' ? source : String(source);
+		if (data.staff !== undefined) {
+			updates.staff = Boolean(data.staff);
+		}
 
-		const player = this.getPlayer(source);
-		if (!player?.ped) return;
+		if (data.permissions !== undefined) {
+			if (typeof data.permissions === 'number' && !isNaN(data.permissions)) {
+				updates.permissions = Math.max(0, data.permissions);
+			}
+		}
 
-		player.coords = coords ?? Vector3.fromArray(GetEntityCoords(player.ped));
+		if (data.ped !== undefined) {
+			const ped = data.ped ?? GetPlayerPed(source);
+			if (ped > 0) {
+				updates.ped = ped;
+			}
+		}
+
+		if (data.coords !== undefined) {
+			if (data.coords) {
+				updates.coords = data.coords;
+			}
+		}
+
+		if (data.ping !== undefined) {
+			if (typeof data.ping === 'number' && data.ping >= 0) {
+				updates.ping = data.ping;
+			}
+		}
+
+		if (data.health !== undefined) {
+			if (typeof data.health === 'number' && data.health >= 0) {
+				updates.health = data.health;
+			}
+		}
+
+		Object.assign(player, updates);
+
+		return player;
 	}
 
 	dropAll(reason: string): number {
@@ -116,8 +158,7 @@ class PlayerManager {
 					coords: coordsArray,
 				};
 
-				this.updatePlayerPed(src, ped);
-				this.updatePlayerCoords(src, coords);
+				this.updatePlayer(src, { ped, coords, health, ping });
 			}
 
 			if (Object.keys(updatePacket).length === 0)
