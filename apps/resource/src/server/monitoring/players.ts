@@ -19,6 +19,7 @@ export interface TrackedPlayer {
 	name: string;
 	staff: boolean;
 	permissions: number;
+	joinedAt?: number;
 	ped?: number;
 	coords?: Vector3;
 	ping?: number;
@@ -39,6 +40,7 @@ class PlayerManager {
 			permissions,
 			name,
 			staff: permissions !== 0,
+			joinedAt: Date.now(),
 		});
 	}
 

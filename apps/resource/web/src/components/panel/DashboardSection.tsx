@@ -42,12 +42,14 @@ import {
 	MOCK_CHART,
 	MOCK_PAYLOAD,
 	NUI_DASHBOARD_SUBSCRIBE,
+	NUI_DASHBOARD_UNSUBSCRIBE,
 	NUI_DASHBOARD_UPDATE_EVENT,
 	type NuiDashboardPayload,
 	type NuiDashboardReport,
 } from './dashboard-data';
 import { useNuiEvent } from '~/hooks/useNuiEvent';
 import { fetchNui } from '~/utils/fetchNui';
+import { isEnvBrowser } from '~/utils/misc';
 
 /** Reports recap: quick metrics + latest active tickets, above the chart */
 const REPORTS_MAX_ROWS = 5;
@@ -84,6 +86,9 @@ function ReportsRecap({
 								{unreadTotal}
 							</Badge>
 						)}
+						<Badge variant="warning" className="ml-2">
+							WIP
+						</Badge>
 					</CardTitle>
 
 					<Button
@@ -328,16 +333,17 @@ export function DashboardSection() {
 	// pushes once subscription is active via client.lua
 	useNuiEvent<NuiDashboardPayload>(NUI_DASHBOARD_UPDATE_EVENT, setDashboard);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: `attempt` is a retry trigger
-	// bumped by the button below, not a read dependency
+	// biome-ignore lint/correctness/useExhaustiveDependencies: `attempt` is a retry trigger bumped by the button below, not a read dependency
 	useEffect(() => {
+		if (isEnvBrowser()) {
+			setDashboard(MOCK_PAYLOAD);
+			return;
+		}
+
 		setErrored(false);
 		let cancelled = false;
 
-		fetchNui<NuiDashboardPayload>(NUI_DASHBOARD_SUBSCRIBE, undefined, {
-			data: MOCK_PAYLOAD,
-			delay: 300,
-		})
+		fetchNui<NuiDashboardPayload>(NUI_DASHBOARD_SUBSCRIBE)
 			.then((payload) => {
 				if (!cancelled) setDashboard(payload);
 			})
@@ -348,6 +354,8 @@ export function DashboardSection() {
 		return () => {
 			// drop a late resolution if the component unmounted meanwhile
 			cancelled = true;
+			// stop the server's push feed when the dashboard view closes
+			fetchNui(NUI_DASHBOARD_UNSUBSCRIBE).catch(() => {});
 		};
 	}, [attempt]);
 
@@ -427,7 +435,10 @@ export function DashboardSection() {
 					<CardContent className="px-3 py-0">
 						{/* uptime has no in-game data feed yet */}
 						<div className="text-xl font-bold tracking-tight leading-none text-card-foreground">
-							—
+							{formatDuration(
+								Date.now() - dashboard.stats.serverStartTime,
+								false,
+							)}
 						</div>
 					</CardContent>
 				</Card>
@@ -513,7 +524,7 @@ export function DashboardSection() {
 
 											<span className="flex shrink-0 items-center gap-4 text-xs tabular-nums">
 												<span className="text-muted-foreground/70">
-													{formatDuration(player.duration, false)}
+													{formatDuration(Date.now() - player.joinedAt, false)}
 												</span>
 												<span
 													className={`w-12 text-right ${pingColor(player.ping)}`}
@@ -530,6 +541,7 @@ export function DashboardSection() {
 				</Card>
 
 				{/* right column: reports recap above the player activity chart */}
+				{/* ToDo: link to server metrics / report system */}
 				<div className="flex col-span-2 min-h-0 flex-col gap-2">
 					<Card
 						size="sm"
@@ -539,6 +551,9 @@ export function DashboardSection() {
 							<Activity className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
 							<CardTitle className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80">
 								Player Activity
+								<Badge variant="warning" className="ml-2">
+									WIP
+								</Badge>
 							</CardTitle>
 						</CardHeader>
 						<CardDescription className="px-3 py-0 text-[11px] text-muted-foreground/60">
@@ -555,7 +570,7 @@ export function DashboardSection() {
 								<ChartContainer config={chartConfig} className="h-full w-full">
 									<AreaChart
 										accessibilityLayer
-										data={MOCK_CHART}
+										data={isEnvBrowser() ? MOCK_CHART : []}
 										margin={{
 											top: 10,
 											right: 8,

@@ -4,9 +4,10 @@ import type {
 	NuiDashboardReport,
 } from '@common/types';
 
-// re-exported so views (and later the client Lua bridge) agree on the contract
+// re-exported so views (and the client Lua bridge) agree on the contract
 export {
 	NUI_DASHBOARD_SUBSCRIBE,
+	NUI_DASHBOARD_UNSUBSCRIBE,
 	NUI_DASHBOARD_UPDATE_EVENT,
 } from '@common/types';
 export type {
@@ -17,11 +18,8 @@ export type {
 } from '@common/types';
 
 /**
- * Mock data shown until the client runtime answers the
- * `NUI_DASHBOARD_SUBSCRIBE` NUI callback with the initial
- * `NuiDashboardPayload` and starts pushing `NUI_DASHBOARD_UPDATE_EVENT`
- * updates. The payload below doubles as the browser-dev mock for that
- * subscribe call, so nothing else needs to change here.
+ * Browser-dev mock data, consumed only when `isEnvBrowser()` is true (the
+ * in-game dashboard relies entirely on the real subscribe/push feed).
  */
 /** server slot capacity; live pushes provide real values */
 export const MOCK_CAPACITY = 128;
@@ -76,7 +74,7 @@ export const MOCK_PLAYERS: NuiDashboardPlayer[] = [
 	{ serverId: 10247, name: 'deus_Ex_M', ping: 242, duration: 9_000 },
 ];
 
-/** full mock snapshot for the subscribe call when developing in the browser */
+/** full mock snapshot used by `DashboardSection` only in the browser */
 export const MOCK_PAYLOAD: NuiDashboardPayload = {
 	stats: {
 		players: MOCK_PLAYERS.length,
@@ -88,9 +86,10 @@ export const MOCK_PAYLOAD: NuiDashboardPayload = {
 };
 
 /**
- * The player-activity chart has no in-game feed yet, so it stays mocked in the
- * browser only. When a real sample feed exists, mirror it into a
- * `{ time; players }` array and drop these helpers.
+ * The player-activity chart has no in-game feed yet, so it stays mocked in
+ * the browser only (in-game the chart shows its "Collecting samples" state).
+ * When a real sample feed exists, mirror it into a `{ time; players }`
+ * array and drop these helpers.
  */
 function generateSamples(
 	count: number,

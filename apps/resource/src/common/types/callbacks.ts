@@ -34,6 +34,9 @@ export const EVENT_NAMES = {
 
 	/** server -> client update event for updating the data of currently connected players */
 	S2C_UPDATE_PLAYERS: 'fxmanager:s2c:monitoring:update',
+
+	/** server -> client push of a dashboard snapshot to subscribed panel players */
+	S2C_DASHBOARD_UPDATE: 'fxmanager:s2c:dashboard:update',
 } as const;
 
 /** callback names registered on the server and triggered by the client */
@@ -50,6 +53,10 @@ export const CALLBACK_NAMES = {
 	SPAWN_VEHICLE: 'spawn-vehicle',
 	FIX_VEHICLE: 'fix-vehicle',
 	DELETE_VEHICLE: 'delete-vehicle',
+	/** subscribe the calling player to the dashboard snapshot + push feed */
+	GET_DASHBOARD: 'get-dashboard',
+	/** stop the dashboard push feed for the calling player */
+	UNSUBSCRIBE_DASHBOARD: 'unsubscribe-dashboard',
 	TOGGLE_BLIPS: 'toggle-blips',
 } as const;
 
@@ -62,9 +69,14 @@ export const NUI_DASHBOARD_UPDATE_EVENT = 'dashboard';
 /** NUI callback the dashboard calls once to receive the initial snapshot and open the update feed */
 export const NUI_DASHBOARD_SUBSCRIBE = 'subscribe-dashboard';
 
+/** NUI callback fired when the dashboard view unmounts to stop the push feed */
+export const NUI_DASHBOARD_UNSUBSCRIBE = 'unsubscribe-dashboard';
+
 // region dashboard snapshot payload (client runtime -> NUI)
 /** stats strip on the dashboard; live values once a push is wired server-side */
 export interface NuiDashboardStats {
+	/** serverstart time */
+	serverStartTime: number;
 	players: number;
 	capacity: number;
 	admins: number;
@@ -78,8 +90,8 @@ export interface NuiDashboardPlayer {
 	staff?: boolean;
 	/** server ping in ms, absent until the first monitor tick provides it */
 	ping?: number;
-	/** connected duration in ms */
-	duration: number;
+	/** timestamp of their moment of conenction */
+	joinedAt: number;
 }
 
 /** single active report ticket for the dashboard recap */
@@ -99,6 +111,13 @@ export interface NuiDashboardPayload {
 	reports: NuiDashboardReport[];
 }
 // endregion
+
+/** zeroed snapshot used when a dashboard request is refused/has no data yet */
+export const EMPTY_DASHBOARD: NuiDashboardPayload = {
+	stats: { players: 0, capacity: 0, admins: 0, serverStartTime: Date.now() },
+	players: [],
+	reports: [],
+};
 
 export interface PermissionSnapshot {
 	/** raw UserPermissions bitfield, see @fxmanager/shared/constants */

@@ -6,7 +6,7 @@ import {
 import { ClientCallbacks } from '../../utils/callbacks';
 import { NuiCallback } from '../../utils/nui-callbacks';
 import { permissions } from '../../utils/permissions';
-import { ResourceData } from '@fxmanager/shared/types';
+import type { ResourceData } from '@fxmanager/shared/types';
 
 /** NUI request for the full resource list; gated on the RESOURCE_LIST permission */
 NuiCallback('get-resources', (_, cb) => {
