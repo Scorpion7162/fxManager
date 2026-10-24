@@ -517,6 +517,9 @@ export function DashboardSection() {
 												<span className="w-10 shrink-0 text-right font-mono text-xs text-muted-foreground/60 tabular-nums">
 													{player.serverId}
 												</span>
+												{player.staff && (
+													<Shield className='text-primary' height={16} />
+												)}
 												<span className="truncate font-medium text-card-foreground">
 													{player.name}
 												</span>
