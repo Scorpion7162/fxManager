@@ -58,7 +58,37 @@ export const CALLBACK_NAMES = {
 	/** stop the dashboard push feed for the calling player */
 	UNSUBSCRIBE_DASHBOARD: 'unsubscribe-dashboard',
 	TOGGLE_BLIPS: 'toggle-blips',
+	LIST_PLAYERS: 'list-players',
+	PLAYER_ACTION: 'player-action',
+	LIST_REPORTS: 'list-reports',
+	GET_REPORT: 'get-report',
+	REPORT_ACTION: 'report-action',
 } as const;
+
+export interface PanelPlayer {
+	health?: number;
+	maxHealth?: number;
+	armour?: number;
+	inVehicle?: boolean;
+	bucket?: number;
+	playerId: number;
+	serverId: number;
+	name: string;
+	ping: number;
+}
+
+export interface PlayerActionPayload {
+	playerId: number;
+	target: number;
+	action: 'warn' | 'kick' | 'ban';
+	reason: string;
+	durationSeconds?: number;
+}
+
+export interface PlayerActionReply {
+	success: boolean;
+	message: string;
+}
 
 /** bare NUI callback action used for the SendNUIMessage permissions push */
 export const NUI_PERMISSIONS_EVENT = 'permissions';

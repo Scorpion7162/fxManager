@@ -4,3 +4,4 @@ import './moderation';
 import './movement';
 import './notifications';
 import './vehicle';
+import './reports';

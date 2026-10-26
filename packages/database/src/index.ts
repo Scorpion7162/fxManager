@@ -5,6 +5,7 @@ import { dirname } from 'node:path';
 import * as schema from './schema';
 import { migrations, runMigrations } from './migrations';
 
+import { createReportsRepository } from './repositories/reports';
 import { createPlayersRepository } from './repositories/players';
 import { createBansRepository } from './repositories/bans';
 import { createAuditRepository } from './repositories/audit';
@@ -76,6 +77,7 @@ export function applyMigrations() {
 // region repositories
 
 export const repo = {
+	reports: createReportsRepository(db),
 	players: createPlayersRepository(db),
 	bans: createBansRepository(db),
 	audit: createAuditRepository(db),
