@@ -1,62 +1,33 @@
-# fivem-typescript-boilerplate
+# fxManager in-game resource
 
-A boilerplate for creating FiveM resources with TypeScript.
+F6 opens the quick menu. F7 opens the panel. Players without staff permissions can access their own reports; staff sections follow the configured ACE permissions.
 
-## Getting Started
+## Reports
 
-### Node.js v18+
+- Submit with **F7 → Reports → New report**, or `/report your description`.
+- Players can see and reply to their own reports. Staff with `fxmanager.reports.view` can see the full queue.
+- Replies to other players require `fxmanager.reports.reply`; status changes require `fxmanager.reports.close`.
+- Reports support Open, In progress, and Resolved states, threaded replies, search, and filtering. Resolved reports must be reopened before replying.
+- Reports persist in the existing panel database. The queue shows the latest 100 accessible reports and each conversation shows its latest 200 messages.
+- New reports are limited to one per 30 seconds per connection. Replies are limited to one per second.
 
-Install any LTS release of [`Node.js`](https://nodejs.org/) from v18.
+## Player monitoring
 
-### pnpm
+**F7 → Players → World monitoring** exposes tags and blips. Monitoring requires `fxmanager.game.players`.
 
-Install the [`pnpm`](https://pnpm.io/installation) package manager globally.
+Tags appear above other streamed players within 150 metres, not your own character. They show a server ID, name, armour value, health bar, and speaking indicator. Blips distinguish on-foot, vehicle, and dead players in your routing bucket.
 
-```
-npm install -g pnpm
-```
 
-### Setup
-
-Initialise your own repository by using one of the options below.
-
-- [Create a new repository](https://github.com/new?template_name=fivem-typescript-boilerplate&template_owner=communityox) using this template.
-- [Download](https://github.com/communityox/fivem-typescript-boilerplate/archive/refs/heads/main.zip) the template directly.
-- Use the [GitHub CLI](https://cli.github.com/).
-  - `gh repo create <name> --template=communityox/fivem-typescript-boilerplate`
-
-Navigate to your new directory and execute the following command to install dependencies.
-
-```
-pnpm install
-```
+Displayed health subtracts GTA’s 100-point offset and clamps at zero (200 → 100, 150 → 50). The player roster includes health, armour, vehicle state, ping, and routing bucket. Moderation actions still require their individual kick, ban, or warn permissions.
 
 ## Development
 
-Use `pnpm watch` to actively rebuild modified files while developing the resource.
+From the repository root:
 
-During web development, use `pnpm web:dev` to start vite's webserver and watch for changes.
+```powershell
+bun install
+bun run --cwd apps/resource build
+bun run --cwd apps/resource web:dev
+```
 
-## Build
-
-Use `pnpm build` to build all project files in production mode.
-
-To build and create GitHub releases, tag your commit (e.g. `v1.0.0`) and push it.
-
-## Events
-
-Custom events follow the naming convention described in [EVENTS.md](EVENTS.md). All
-event names are declared as constants in `EVENT_NAMES` (`src/common/types/callbacks.ts`).
-
-## Layout
-
-- [/dist/](dist)
-  - Compiled project files.
-- [/locales/](locales)
-  - JSON files used for translations with [ox_lib](https://coxdocs.dev/ox_lib/Modules/Locale/Shared).
-- [/scripts/](scripts)
-  - Scripts used in the development process, but not part of the compiled resource.
-- [/src/](src)
-  - Project source code.
-- [/static/](static)
-  - Files to include with the resource that aren't compiled or loaded (e.g. config).
+The resource build uses the installed `@overextended/fx-utils`. The core supplies the resource API token and API port. Restart through the manager so those runtime settings are restored correctly.
