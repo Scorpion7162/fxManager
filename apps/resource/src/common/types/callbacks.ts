@@ -73,7 +73,7 @@ export const NUI_DASHBOARD_SUBSCRIBE = 'subscribe-dashboard';
 export const NUI_DASHBOARD_UNSUBSCRIBE = 'unsubscribe-dashboard';
 
 // region dashboard snapshot payload (client runtime -> NUI)
-/** stats strip on the dashboard; live values once a push is wired server-side */
+/** stats strip on the dashboard; pushed values stay live */
 export interface NuiDashboardStats {
 	/** serverstart time */
 	serverStartTime: number;
@@ -104,17 +104,39 @@ export interface NuiDashboardReport {
 	age: string;
 }
 
-/** full dashboard snapshot; sent on join and whenever any piece changes */
-export interface NuiDashboardPayload {
+export interface NuiDashboardPlayerHistorySnapshot {
+	ts: number;
+	players: number;
+}
+
+/** full dashboard snapshot; sent once to a new dashboard viewer as its initial sync */
+export interface NuiDashboardSnapshot {
+	type: 'snapshot';
 	stats: NuiDashboardStats;
 	players: NuiDashboardPlayer[];
+	/** decimated (minute-level) player-count history for the chart */
+	playerHistory: NuiDashboardPlayerHistorySnapshot[];
 	reports: NuiDashboardReport[];
 }
+
+/** incremental dashboard push; playerHistory holds only newly completed samples */
+export interface NuiDashboardUpdate {
+	type: 'update';
+	stats: NuiDashboardStats;
+	players: NuiDashboardPlayer[];
+	/** chart points completed since the previous push (often empty) */
+	playerHistory: NuiDashboardPlayerHistorySnapshot[];
+}
+
+/** payload sent on the S2C_DASHBOARD_UPDATE push feed */
+export type NuiDashboardEvent = NuiDashboardSnapshot | NuiDashboardUpdate;
 // endregion
 
 /** zeroed snapshot used when a dashboard request is refused/has no data yet */
-export const EMPTY_DASHBOARD: NuiDashboardPayload = {
+export const EMPTY_DASHBOARD: NuiDashboardSnapshot = {
+	type: 'snapshot',
 	stats: { players: 0, capacity: 0, admins: 0, serverStartTime: Date.now() },
+	playerHistory: [],
 	players: [],
 	reports: [],
 };

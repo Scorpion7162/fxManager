@@ -1,7 +1,7 @@
 import {
 	NUI_DASHBOARD_UPDATE_EVENT,
 	NUI_DASHBOARD_UNSUBSCRIBE,
-	type NuiDashboardPayload,
+	type NuiDashboardEvent,
 	EMPTY_DASHBOARD,
 	CALLBACK_NAMES,
 	EVENT_NAMES,
@@ -16,7 +16,7 @@ NuiCallback('subscribe-dashboard', (_, cb) => {
 		return;
 	}
 
-	ClientCallbacks.trigger<NuiDashboardPayload | undefined>(
+	ClientCallbacks.trigger<NuiDashboardEvent | undefined>(
 		CALLBACK_NAMES.GET_DASHBOARD,
 		undefined,
 		{ fallback: undefined },
@@ -40,7 +40,7 @@ NuiCallback(NUI_DASHBOARD_UNSUBSCRIBE, (_, cb) => {
 	});
 });
 
-/** forward server-side dashboard pushes to the NUI (`SendNUIMessage`) */
-onNet(EVENT_NAMES.S2C_DASHBOARD_UPDATE, (payload: NuiDashboardPayload) => {
+/** forward server-side dashboard pushes (tagged snapshot/update) to the NUI */
+onNet(EVENT_NAMES.S2C_DASHBOARD_UPDATE, (payload: NuiDashboardEvent) => {
 	SendNUIMessage({ action: NUI_DASHBOARD_UPDATE_EVENT, data: payload });
 });

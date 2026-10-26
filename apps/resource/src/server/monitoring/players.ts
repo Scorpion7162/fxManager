@@ -1,10 +1,7 @@
-import type {
-	ClientPlayerBlipUpdate,
-	PlayerUpdatePackage,
-} from '@fxmanager/shared/types';
+import type { PlayerUpdatePackage } from '@fxmanager/shared/types';
 import { QueryManager } from '../utils/query';
 import { getPermissions } from '../utils/permissions';
-import { EVENT_NAMES, type UserPermissionKey } from '@common/types';
+import { type UserPermissionKey } from '@common/types';
 import { PermissionManager } from '@fxmanager/shared/utils';
 import { UserPermissions } from '@fxmanager/shared/constants';
 import { IsInDevelopment } from '@common/utils';
@@ -26,7 +23,17 @@ export interface TrackedPlayer {
 	health?: number;
 }
 
+/** how long the manager will track raw player count samples in ms */
+const HISTORY_LENGTH = 60_000 * 60;
+
+/** a timestamped player-count sample written by the monitor interval */
+export interface PlayerCountSample {
+	ts: number;
+	players: number;
+}
+
 class PlayerManager {
+	private playerHistory: PlayerCountSample[] = [];
 	private players: Map<string, TrackedPlayer> = new Map();
 	private updateInterval: NodeJS.Timeout | null = null;
 	private tickListeners = new Set<() => void>();
@@ -156,13 +163,34 @@ class PlayerManager {
 		return () => this.tickListeners.delete(listener);
 	}
 
+	/**
+	 * Raw player-count samples captured at the monitor cadence (do not assume
+	 * their resolution or shape; consumers aggregate what they need).
+	 */
+	getRawPlayerHistory(): PlayerCountSample[] {
+		return [...this.playerHistory];
+	}
+
+	private updateHistory(players: number) {
+		const now = Date.now();
+		this.playerHistory.push({ ts: now, players });
+
+		const cutoff = now - HISTORY_LENGTH;
+
+		while (this.playerHistory[0] && this.playerHistory[0].ts < cutoff) {
+			this.playerHistory.shift();
+		}
+	}
+
 	private startUpdates() {
 		this.updateInterval = setInterval(async () => {
 			const updatePacket: PlayerUpdatePackage = {};
-			const clientUpdatePacket: ClientPlayerBlipUpdate = {};
+			let playerCount = 0;
 
 			for (const src of this.players.keys()) {
 				const ped = GetPlayerPed(src);
+				playerCount++;
+
 				if (ped <= 0) continue; // sanity check
 
 				const health = GetEntityHealth(ped);
@@ -171,10 +199,6 @@ class PlayerManager {
 				const coordsArray = coords.toArray();
 
 				updatePacket[src] = [health, ping, coordsArray];
-				clientUpdatePacket[src] = {
-					username: GetPlayerName(src),
-					coords: coordsArray,
-				};
 
 				this.updatePlayer(src, { ped, coords, health, ping });
 			}
@@ -182,9 +206,7 @@ class PlayerManager {
 			if (Object.keys(updatePacket).length === 0)
 				return console.warn('NO DATA FOR UPDATE INTERVAL');
 
-			this.getPlayers({ permission: 'PLAYER_MONITORING' }).forEach((src) => {
-				emitNet(EVENT_NAMES.S2C_UPDATE_PLAYERS, src, clientUpdatePacket);
-			});
+			this.updateHistory(playerCount);
 
 			await QueryManager({
 				endpoint: '/players/update',

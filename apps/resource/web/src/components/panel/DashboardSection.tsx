@@ -38,15 +38,16 @@ import { useEffect, useMemo, useState } from 'react';
 import { Skeleton } from '@fxmanager/ui/components/skeleton';
 
 import {
-	MOCK_CAPACITY,
-	MOCK_CHART,
-	MOCK_PAYLOAD,
+	EMPTY_DASHBOARD,
 	NUI_DASHBOARD_SUBSCRIBE,
 	NUI_DASHBOARD_UNSUBSCRIBE,
 	NUI_DASHBOARD_UPDATE_EVENT,
-	type NuiDashboardPayload,
+	type NuiDashboardEvent,
+	type NuiDashboardPlayerHistorySnapshot,
 	type NuiDashboardReport,
+	type NuiDashboardSnapshot,
 } from './dashboard-data';
+import { createMockDashboard } from './dashboard-data';
 import { useNuiEvent } from '~/hooks/useNuiEvent';
 import { fetchNui } from '~/utils/fetchNui';
 import { isEnvBrowser } from '~/utils/misc';
@@ -171,6 +172,16 @@ function pingColor(ping?: number): string {
 	if (ping < 80) return 'text-emerald-400';
 	if (ping < 150) return 'text-yellow-400';
 	return 'text-red-500';
+}
+
+/** the chart X axis: raw history timestamps formatted client-side */
+const chartClock = new Intl.DateTimeFormat([], {
+	hour: '2-digit',
+	minute: '2-digit',
+});
+
+function formatChartTime(ts: number): string {
+	return chartClock.format(ts);
 }
 
 function formatDuration(ms: number, showSeconds: boolean = true): string {
@@ -323,27 +334,71 @@ function DashboardSkeleton() {
 	);
 }
 
+/* ---------- dashboard event handling ---------- */
+
+/**
+ * Merges an incoming dashboard event into the local state. Snapshots replace
+ * everything; updates merge, upserting chart points by their timestamp (a
+ * repeat point is Harmless) and keeping only the trailing hour window.
+ * Updates arriving before the first snapshot are dropped.
+ */
+const HISTORY_WINDOW_MS = 60 * 60 * 1000;
+
+function mergeHistory(
+	previous: NuiDashboardPlayerHistorySnapshot[],
+	incoming: NuiDashboardPlayerHistorySnapshot[],
+): NuiDashboardPlayerHistorySnapshot[] {
+	if (incoming.length === 0) return previous;
+
+	const byTs = new Map(previous.map((point) => [point.ts, point]));
+	for (const point of incoming) byTs.set(point.ts, point);
+
+	// keep the trailing window only, so the client mirrors the server-side prune
+	const latest = Math.max(...byTs.keys());
+	return [...byTs.values()].filter(
+		(point) => point.ts > latest - HISTORY_WINDOW_MS,
+	);
+}
+
+function mergeDashboardEvent(
+	previous: NuiDashboardSnapshot | null,
+	event: NuiDashboardEvent,
+): NuiDashboardSnapshot | null {
+	if (event.type === 'snapshot') return event;
+	if (previous === null) return null;
+
+	return {
+		...previous,
+		stats: event.stats,
+		players: event.players,
+		playerHistory: mergeHistory(previous.playerHistory, event.playerHistory),
+	};
+}
+
 export function DashboardSection() {
 	// server ID ascending initially; the toggle switches to name sorting
 	const [sortMode, setSortMode] = useState<PlayerSortMode>('id');
-	const [dashboard, setDashboard] = useState<NuiDashboardPayload | null>(null);
+	const [dashboard, setDashboard] = useState<NuiDashboardSnapshot | null>(null);
 	const [errored, setErrored] = useState(false);
 	const [attempt, setAttempt] = useState(0);
 
-	// pushes once subscription is active via client.lua
-	useNuiEvent<NuiDashboardPayload>(NUI_DASHBOARD_UPDATE_EVENT, setDashboard);
+	// pushes once subscription is active via client.lua; tagged merge keeps the
+	// local state coherent between the initial snapshot and delta updates
+	useNuiEvent<NuiDashboardEvent>(NUI_DASHBOARD_UPDATE_EVENT, (event) => {
+		setDashboard((previous) => mergeDashboardEvent(previous, event));
+	});
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: `attempt` is a retry trigger bumped by the button below, not a read dependency
 	useEffect(() => {
 		if (isEnvBrowser()) {
-			setDashboard(MOCK_PAYLOAD);
+			setDashboard(createMockDashboard());
 			return;
 		}
 
 		setErrored(false);
 		let cancelled = false;
 
-		fetchNui<NuiDashboardPayload>(NUI_DASHBOARD_SUBSCRIBE)
+		fetchNui<NuiDashboardSnapshot>(NUI_DASHBOARD_SUBSCRIBE)
 			.then((payload) => {
 				if (!cancelled) setDashboard(payload);
 			})
@@ -373,14 +428,18 @@ export function DashboardSection() {
 
 	// never passes undefined stats down to the cards
 	const stats = useMemo(() => {
-		return (
-			dashboard?.stats ?? {
-				players: 0,
-				capacity: MOCK_CAPACITY,
-				admins: 0,
-			}
-		);
+		return dashboard?.stats ?? EMPTY_DASHBOARD.stats;
 	}, [dashboard]);
+
+	// chart points from the merged history; timestamps -> readable axis labels
+	const chartData = useMemo(
+		() =>
+			(dashboard?.playerHistory ?? []).map((point) => ({
+				time: formatChartTime(point.ts),
+				players: point.players,
+			})),
+		[dashboard],
+	);
 
 	if (!hasData) {
 		return errored ? (
@@ -518,7 +577,7 @@ export function DashboardSection() {
 													{player.serverId}
 												</span>
 												{player.staff && (
-													<Shield className='text-primary' height={16} />
+													<Shield className="text-primary" height={16} />
 												)}
 												<span className="truncate font-medium text-card-foreground">
 													{player.name}
@@ -565,7 +624,7 @@ export function DashboardSection() {
 
 						<CardContent className="min-h-0 px-1 pb-0">
 							{' '}
-							{MOCK_CHART.length === 0 ? (
+							{chartData.length === 0 ? (
 								<div className="flex items-center justify-center text-sm text-muted-foreground">
 									Collecting player samples…
 								</div>
@@ -573,7 +632,7 @@ export function DashboardSection() {
 								<ChartContainer config={chartConfig} className="h-full w-full">
 									<AreaChart
 										accessibilityLayer
-										data={isEnvBrowser() ? MOCK_CHART : []}
+										data={chartData}
 										margin={{
 											top: 10,
 											right: 8,
