@@ -154,7 +154,7 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 					{players.filter((p) => p.ping >= 150).length} high latency
 				</span>
 				<span className="ml-auto text-xs text-muted-foreground">
-					Live state Â· refreshes every 5s
+					Live state · refreshes every 5s
 				</span>
 			</div>
 			<div className="relative max-w-lg">
@@ -162,7 +162,7 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 				<Input
 					aria-label="Search players by name or server ID"
 					className="pl-9"
-					placeholder="Search by name or exact server IDâ€¦"
+					placeholder="Search by name or exact server ID…"
 					value={query}
 					onChange={(event) => setQuery(event.target.value)}
 				/>
@@ -214,13 +214,13 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 													? 'In vehicle'
 													: 'On foot'}
 										<span className="mt-1 block text-muted-foreground">
-											Bucket {player.bucket ?? 'â€”'}
+											Bucket {player.bucket ?? '—'}
 										</span>
 									</td>
 									<td className="px-4 py-3 text-xs tabular-nums">
 										{player.health === undefined
-											? 'â€”'
-											: `${player.health}/${(player.maxHealth ?? 200)} HP`}
+											? '—'
+											: `${Math.max(0, player.health - 100)}/${Math.max(0, (player.maxHealth ?? 200) - 100)} HP`}
 										<span className="mt-1 block text-muted-foreground">
 											{player.armour ?? 0} armour
 										</span>
@@ -248,7 +248,7 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 							role="status"
 							className="animate-pulse p-8 text-sm text-muted-foreground"
 						>
-							Loading connected playersâ€¦
+							Loading connected players…
 						</div>
 					) : (
 						!filtered.length && (
@@ -292,9 +292,9 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 										<dt className="text-muted-foreground">Health</dt>
 										<dd className="mt-1 font-medium">
 											{liveSelected.health === undefined
-												? 'â€”'
-												: liveSelected.health}{' '}
-											/ {(liveSelected.maxHealth ?? 200)}
+												? '—'
+												: Math.max(0, liveSelected.health - 100)}{' '}
+											/ {Math.max(0, (liveSelected.maxHealth ?? 200) - 100)}
 										</dd>
 									</div>
 									<div>
@@ -310,7 +310,7 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 									<div>
 										<dt className="text-muted-foreground">Routing bucket</dt>
 										<dd className="mt-1 font-medium">
-											{liveSelected.bucket ?? 'â€”'}
+											{liveSelected.bucket ?? '—'}
 										</dd>
 									</div>
 								</dl>
@@ -370,7 +370,7 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 									maxLength={500}
 									rows={4}
 									className="resize-y rounded-md border bg-background p-3 font-normal"
-									placeholder="Explain the rule violationâ€¦"
+									placeholder="Explain the rule violation…"
 									value={reason}
 									disabled={pending}
 									onChange={(event) => setReason(event.target.value)}
@@ -398,7 +398,7 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 									)
 								}
 							>
-								{pending ? 'Submittingâ€¦' : `Confirm ${action}`}
+								{pending ? 'Submitting…' : `Confirm ${action}`}
 							</Button>
 							<Button
 								type="button"
