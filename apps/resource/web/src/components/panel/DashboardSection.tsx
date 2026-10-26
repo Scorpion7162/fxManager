@@ -1,3 +1,4 @@
+import type { ReportSummary } from '@fxmanager/shared/types';
 import { Badge } from '@fxmanager/ui/components/badge';
 import {
 	Card,
@@ -56,12 +57,54 @@ import { isEnvBrowser } from '~/utils/misc';
 const REPORTS_MAX_ROWS = 5;
 
 function ReportsRecap({
-	reports,
+	reports: initialReports,
 	className = '',
 }: {
 	reports: NuiDashboardReport[];
 	className?: string;
 }) {
+	const [reports, setReports] = useState(initialReports);
+	const [reportsError, setReportsError] = useState(false);
+	useEffect(() => {
+		let cancelled = false;
+		const load = async () => {
+			try {
+				const rows = await fetchNui<ReportSummary[] | null>(
+					'get-reports',
+					null,
+					{ data: [] },
+				);
+				if (!rows) throw new Error('Reports unavailable');
+				if (!cancelled) {
+					setReports(
+						rows
+							.filter((r) => r.status !== 'resolved')
+							.map((r) => ({
+								id: r.id,
+								subject: r.subject,
+								unread: 0,
+								age: `${Math.max(0, Math.floor((Date.now() - r.openedAt) / 60000))}m`,
+							})),
+					);
+					setReportsError(false);
+				}
+			} catch {
+				if (!cancelled) setReportsError(true);
+			}
+		};
+		void load();
+		const timer = setInterval(load, 5000);
+		return () => {
+			cancelled = true;
+			clearInterval(timer);
+		};
+	}, []);
+	const openReports = (id?: number) =>
+		window.dispatchEvent(
+			new CustomEvent('panel-section', {
+				detail: { section: 'reports', reportId: id },
+			}),
+		);
 	const activeReports = reports.slice(0, REPORTS_MAX_ROWS);
 	const unreadTotal = reports.reduce((sum, r) => sum + r.unread, 0);
 
@@ -87,9 +130,6 @@ function ReportsRecap({
 								{unreadTotal}
 							</Badge>
 						)}
-						<Badge variant="warning" className="ml-2">
-							WIP
-						</Badge>
 					</CardTitle>
 
 					<Button
@@ -97,6 +137,7 @@ function ReportsRecap({
 						size="icon-xs"
 						className="text-muted-foreground/60 hover:text-foreground"
 						title="View all reports"
+						onClick={() => openReports()}
 					>
 						<ChevronRightIcon />
 					</Button>
@@ -110,7 +151,11 @@ function ReportsRecap({
 			<CardContent className="flex min-h-0 flex-1 flex-col px-2 pb-2">
 				{activeReports.length === 0 ? (
 					<div className="flex flex-1 items-center justify-center">
-						<p className="text-sm text-muted-foreground">No active reports.</p>
+						<p className="text-sm text-muted-foreground">
+							{reportsError
+								? 'Reports unavailable. Open the report desk to retry.'
+								: 'No active reports.'}
+						</p>
 					</div>
 				) : (
 					<ul className="flex min-h-0 flex-1 flex-col divide-y divide-border/50">
@@ -119,7 +164,8 @@ function ReportsRecap({
 								<button
 									type="button"
 									className="flex w-full justify-between gap-3 py-1.5 text-left"
-									title={`Open report #${report.id} (live data pending)`}
+									title={`Open report #${report.id}`}
+									onClick={() => openReports(report.id)}
 								>
 									<span className="flex min-w-0 items-center gap-2 text-sm leading-none">
 										<Flag
@@ -463,7 +509,7 @@ export function DashboardSection() {
 	}
 
 	return (
-		<div className="flex h-full flex-col gap-3 text-muted-foreground">
+		<div className="flex min-h-[540px] flex-col gap-3 text-muted-foreground">
 			{/* stat strip */}
 			<div className="grid grid-cols-3 gap-2">
 				<Card size="sm" className="bg-card/50 py-3">
