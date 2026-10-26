@@ -603,7 +603,6 @@ export function DashboardSection() {
 				</Card>
 
 				{/* right column: reports recap above the player activity chart */}
-				{/* ToDo: link to server metrics / report system */}
 				<div className="flex col-span-2 min-h-0 flex-col gap-2">
 					<Card
 						size="sm"
@@ -613,9 +612,6 @@ export function DashboardSection() {
 							<Activity className="h-3.5 w-3.5 shrink-0 text-muted-foreground/60" />
 							<CardTitle className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/80">
 								Player Activity
-								<Badge variant="warning" className="ml-2">
-									WIP
-								</Badge>
 							</CardTitle>
 						</CardHeader>
 						<CardDescription className="px-3 py-0 text-[11px] text-muted-foreground/60">
@@ -693,6 +689,7 @@ export function DashboardSection() {
 						</CardContent>
 					</Card>
 
+					{/* ToDo: report system */}
 					<ReportsRecap reports={dashboard.reports} className="flex-1" />
 				</div>
 			</div>
