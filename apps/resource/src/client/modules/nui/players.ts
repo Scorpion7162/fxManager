@@ -2,12 +2,14 @@ import { CALLBACK_NAMES } from '@common/types';
 import { ClientCallbacks } from '../../utils/callbacks';
 import { NuiCallback } from '../../utils/nui-callbacks';
 
-NuiCallback<Record<string, unknown>, unknown>('get-players', async (_, reply) =>
-	reply(
-		await ClientCallbacks.trigger(CALLBACK_NAMES.LIST_PLAYERS, null, {
-			fallback: null,
-		}),
-	),
+NuiCallback<Record<string, unknown>, unknown>(
+	'get-players',
+	async (payload, reply) =>
+		reply(
+			await ClientCallbacks.trigger(CALLBACK_NAMES.LIST_PLAYERS, payload, {
+				fallback: null,
+			}),
+		),
 );
 NuiCallback('player-action', async (payload, reply) =>
 	reply(

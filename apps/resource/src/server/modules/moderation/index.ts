@@ -27,10 +27,20 @@ const actionPermissions = {
 	ban: UserPermissions.BAN,
 };
 
-ServerCallbacks.register<null, PanelPlayer[] | null>(
+ServerCallbacks.register<unknown, PanelPlayer[] | null>(
 	CALLBACK_NAMES.LIST_PLAYERS,
-	async () =>
-		(
+	async (_, payload) => {
+		const query =
+			payload && typeof payload === 'object'
+				? (payload as { query?: unknown }).query
+				: undefined;
+		if (
+			query !== undefined &&
+			(typeof query !== 'string' || query.length > 100)
+		)
+			return null;
+		const search = typeof query === 'string' ? query.trim() : '';
+		const online = (
 			await QueryManager<OnlinePlayer[]>({
 				endpoint: '/ingame/players',
 				method: 'GET',
@@ -39,6 +49,7 @@ ServerCallbacks.register<null, PanelPlayer[] | null>(
 			const source = String(player.serverId);
 			const ped = GetPlayerPed(source);
 			return {
+				online: true,
 				playerId: player.id,
 				serverId: player.serverId,
 				name: player.name,
@@ -53,7 +64,36 @@ ServerCallbacks.register<null, PanelPlayer[] | null>(
 						}
 					: {}),
 			};
-		}),
+		});
+		if (!search) return online;
+		const matches = await QueryManager<{
+			items: { id: number; name: string }[];
+		}>({
+			endpoint: `/ingame/players/search?q=${encodeURIComponent(search)}&pageSize=50`,
+			method: 'GET',
+		});
+		const found = new Map<number, PanelPlayer>(
+			matches.items.map((player) => [
+				player.id,
+				online.find((item) => item.playerId === player.id) ?? {
+					playerId: player.id,
+					name: player.name,
+					online: false,
+					serverId: 0,
+					ping: 0,
+				},
+			]),
+		);
+		for (const player of online)
+			if (
+				player.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()) ||
+				String(player.serverId) === search
+			)
+				found.set(player.playerId, player);
+		return [...found.values()].sort(
+			(a, b) => Number(b.online) - Number(a.online),
+		);
+	},
 	{ permission: 'PLAYER_MONITORING', fallback: null },
 );
 
@@ -69,7 +109,10 @@ ServerCallbacks.register<unknown, PlayerActionReply>(
 			)
 		)
 			return denied;
-		if (!GetPlayerName(String(payload.target)))
+		if (
+			payload.action === 'kick' &&
+			(payload.target < 1 || !GetPlayerName(String(payload.target)))
+		)
 			return {
 				success: false,
 				message: 'Player has disconnected. Refresh the list.',

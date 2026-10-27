@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@fxmanager/ui/components/button';
 import { Input } from '@fxmanager/ui/components/input';
 import { Search, RefreshCw, Users } from 'lucide-react';
@@ -13,9 +13,9 @@ import { fetchNui } from '~/utils/fetchNui';
 import { showNotification } from '~/store/notifications';
 
 const PREVIEW_PLAYERS: PanelPlayer[] = [
-	{ playerId: 1, serverId: 1, name: 'Scorpion', ping: 24 },
-	{ playerId: 2, serverId: 12, name: 'Alex Morgan', ping: 48 },
-	{ playerId: 3, serverId: 26, name: 'Taylor', ping: 112 },
+	{ playerId: 1, serverId: 1, name: 'Scorpion', ping: 24, online: true },
+	{ playerId: 2, serverId: 12, name: 'Alex Morgan', ping: 48, online: true },
+	{ playerId: 3, serverId: 26, name: 'Taylor', ping: 112, online: true },
 ];
 const ACTIONS = [
 	{ key: 'warn', label: 'Warn', permission: UserPermissions.WARN },
@@ -36,59 +36,74 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 	const [reason, setReason] = useState('');
 	const [duration, setDuration] = useState(86400);
 	const [pending, setPending] = useState(false);
+	const loadSequence = useRef(0);
 	const load = useCallback(async () => {
+		const sequence = ++loadSequence.current;
 		try {
-			const data = await fetchNui<PanelPlayer[] | null>('get-players', null, {
-				data: PREVIEW_PLAYERS,
-				delay: 150,
-			});
+			const data = await fetchNui<PanelPlayer[] | null>(
+				'get-players',
+				{ query },
+				{
+					data: PREVIEW_PLAYERS,
+					delay: 150,
+				},
+			);
+			if (sequence !== loadSequence.current) return;
 			if (!data)
 				throw new Error(
 					'Player list unavailable. Check your permissions and server connection.',
 				);
 			setPlayers(data);
+			setSelected((current) =>
+				current
+					? (data.find((player) => player.playerId === current.playerId) ??
+						null)
+					: null,
+			);
 			setError('');
 		} catch (error) {
+			if (sequence !== loadSequence.current) return;
 			setError(
 				error instanceof Error ? error.message : 'Unable to load players.',
 			);
 		} finally {
-			setLoading(false);
+			if (sequence === loadSequence.current) setLoading(false);
 		}
-	}, []);
+	}, [query]);
 	useEffect(() => {
-		void load();
-		const timer = setInterval(load, 5000);
-		return () => clearInterval(timer);
+		let stopped = false;
+		let timer: ReturnType<typeof setTimeout>;
+		const poll = async () => {
+			await load();
+			if (!stopped) timer = setTimeout(poll, 5000);
+		};
+		setLoading(true);
+		timer = setTimeout(poll, 300);
+		return () => {
+			stopped = true;
+			clearTimeout(timer);
+			++loadSequence.current;
+		};
 	}, [load]);
 	const liveSelected =
-		players.find(
-			(p) =>
-				p.playerId === selected?.playerId && p.serverId === selected?.serverId,
-		) ?? selected;
-	const filtered = players.filter(
-		(player) =>
-			player.name
-				.toLocaleLowerCase()
-				.includes(query.trim().toLocaleLowerCase()) ||
-			String(player.serverId) === query.trim(),
-	);
-	const connected =
-		selected &&
-		players.some(
-			(player) =>
-				player.serverId === selected.serverId &&
-				player.playerId === selected.playerId,
-		);
+		players.find((p) => p.playerId === selected?.playerId) ?? selected;
+	const connected = liveSelected?.online === true;
+
 	async function submit() {
-		if (!selected || pending || !connected || !reason.trim()) return;
+		if (
+			!selected ||
+			pending ||
+			(action === 'kick' && !connected) ||
+			!reason.trim()
+		)
+			return;
 		setPending(true);
 		try {
 			const reply = await fetchNui<PlayerActionReply>(
 				'player-action',
 				{
 					playerId: selected.playerId,
-					target: selected.serverId,
+					target: liveSelected?.serverId ?? 0,
 					action,
 					reason: reason.trim(),
 					...(action === 'ban' ? { durationSeconds: duration } : {}),
@@ -124,7 +139,7 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 					<h2 className="text-xl font-semibold">
 						Players{' '}
 						<span className="ml-2 text-sm font-normal text-muted-foreground">
-							{players.length} online
+							{players.filter((p) => p.online).length} online
 						</span>
 					</h2>
 					<p className="mt-1 text-sm text-muted-foreground">
@@ -143,7 +158,10 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 			</header>
 			<div className="flex flex-wrap gap-x-6 gap-y-2 border-y py-3 text-sm">
 				<span>
-					<strong className="mr-1 text-lg">{players.length}</strong> connected
+					<strong className="mr-1 text-lg">
+						{players.filter((p) => p.online).length}
+					</strong>{' '}
+					online matches
 				</span>
 				<span className="text-muted-foreground">
 					{players.filter((p) => p.inVehicle).length} in vehicles
@@ -152,15 +170,16 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 					{players.filter((p) => p.ping >= 150).length} high latency
 				</span>
 				<span className="ml-auto text-xs text-muted-foreground">
-					Live state · refreshes every 5s
+					Search includes up to 50 database matches · refreshes every 5s
 				</span>
 			</div>
 			<div className="relative max-w-lg">
 				<Search className="absolute left-3 top-3 size-4 text-muted-foreground" />
 				<Input
-					aria-label="Search players by name or server ID"
+					aria-label="Search online and offline players"
 					className="pl-9"
-					placeholder="Search by name or exact server ID…"
+					placeholder="Search online & offline by name, identifier or server ID…"
+					maxLength={100}
 					value={query}
 					onChange={(event) => setQuery(event.target.value)}
 				/>
@@ -192,25 +211,27 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 							</tr>
 						</thead>
 						<tbody>
-							{filtered.map((player) => (
+							{players.map((player) => (
 								<tr
-									key={player.serverId}
-									className={`border-t ${selected?.serverId === player.serverId ? 'bg-secondary' : 'hover:bg-muted/30'}`}
+									key={player.playerId}
+									className={`border-t ${selected?.playerId === player.playerId ? 'bg-secondary' : 'hover:bg-muted/30'}`}
 								>
 									<td className="max-w-[240px] break-words px-4 py-3 font-medium">
 										{player.name}
 									</td>
 									<td className="px-4 py-3 font-mono tabular-nums">
-										#{player.serverId}
+										{player.online ? `#${player.serverId}` : '—'}
 									</td>
 									<td className="px-4 py-3 text-xs">
-										{player.health === undefined
-											? 'Spawning'
-											: player.health <= 0
-												? 'Dead'
-												: player.inVehicle
-													? 'In vehicle'
-													: 'On foot'}
+										{!player.online
+											? 'Offline'
+											: player.health === undefined
+												? 'Online · Spawning'
+												: player.health <= 0
+													? 'Online · Dead'
+													: player.inVehicle
+														? 'Online · In vehicle'
+														: 'Online · On foot'}
 										<span className="mt-1 block text-muted-foreground">
 											Bucket {player.bucket ?? '—'}
 										</span>
@@ -220,10 +241,12 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 											? '—'
 											: `${Math.max(0, player.health - 100)}/${Math.max(0, (player.maxHealth ?? 200) - 100)} HP`}
 										<span className="mt-1 block text-muted-foreground">
-											{player.armour ?? 0} armour
+											{player.online ? `${player.armour ?? 0} armour` : ''}
 										</span>
 									</td>
-									<td className="px-4 py-3 tabular-nums">{player.ping} ms</td>
+									<td className="px-4 py-3 tabular-nums">
+										{player.online ? `${player.ping} ms` : '—'}
+									</td>
 									<td className="px-4 py-3 text-right">
 										<Button
 											variant="outline"
@@ -246,10 +269,10 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 							role="status"
 							className="animate-pulse p-8 text-sm text-muted-foreground"
 						>
-							Loading connected players…
+							Searching players…
 						</div>
 					) : (
-						!filtered.length && (
+						!players.length && (
 							<div className="p-8 text-center text-sm text-muted-foreground">
 								{query
 									? 'No players match. Try a name or exact server ID.'
@@ -281,10 +304,13 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 									{selected.name}
 								</h3>
 								<p className="text-sm text-muted-foreground">
-									Server ID #{selected.serverId}
+									{connected
+										? `Online · Server ID #${liveSelected?.serverId}`
+										: 'Offline'}{' '}
+									· Player #{selected.playerId}
 								</p>
 							</div>
-							{liveSelected && (
+							{liveSelected?.online && (
 								<dl className="grid grid-cols-2 gap-3 border-y py-3 text-xs">
 									<div>
 										<dt className="text-muted-foreground">Health</dt>
@@ -315,7 +341,8 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 							)}
 							{!connected && (
 								<p role="alert" className="text-sm text-destructive">
-									This player disconnected. Select a connected player.
+									This player is offline. Warnings and bans are available;
+									kicking requires an online player.
 								</p>
 							)}
 							<label className="flex flex-col gap-2 text-sm font-medium">
@@ -336,7 +363,11 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 									{ACTIONS.filter((item) =>
 										PermissionManager.has(permissions, item.permission),
 									).map((item) => (
-										<option value={item.key} key={item.key}>
+										<option
+											value={item.key}
+											key={item.key}
+											disabled={item.key === 'kick' && !connected}
+										>
 											{item.label}
 										</option>
 									))}
@@ -387,7 +418,7 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 								variant={action === 'warn' ? 'default' : 'destructive'}
 								disabled={
 									pending ||
-									!connected ||
+									(action === 'kick' && !connected) ||
 									!reason.trim() ||
 									!ACTIONS.some(
 										(item) =>

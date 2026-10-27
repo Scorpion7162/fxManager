@@ -7,7 +7,7 @@ export function isPlayerAction(value: unknown): value is PlayerActionPayload {
 		Number.isSafeInteger(data.playerId) &&
 		Number(data.playerId) > 0 &&
 		Number.isSafeInteger(data.target) &&
-		Number(data.target) > 0 &&
+		Number(data.target) >= 0 &&
 		typeof data.action === 'string' &&
 		['warn', 'kick', 'ban'].includes(data.action) &&
 		typeof data.reason === 'string' &&
