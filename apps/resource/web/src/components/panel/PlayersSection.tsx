@@ -10,7 +10,6 @@ import type {
 	PlayerActionReply,
 } from '@common/types';
 import { fetchNui } from '~/utils/fetchNui';
-import { MonitoringControls } from './MonitoringControls';
 import { showNotification } from '~/store/notifications';
 
 const PREVIEW_PLAYERS: PanelPlayer[] = [
@@ -142,7 +141,6 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 					Refresh
 				</Button>
 			</header>
-			<MonitoringControls />
 			<div className="flex flex-wrap gap-x-6 gap-y-2 border-y py-3 text-sm">
 				<span>
 					<strong className="mr-1 text-lg">{players.length}</strong> connected
