@@ -84,4 +84,3 @@ RegisterKeyMapping(
 );
 RegisterKeyMapping('fx-mainpanel', 'Open fxManager panel', 'keyboard', 'F7');
 import './players';
-import './reports';

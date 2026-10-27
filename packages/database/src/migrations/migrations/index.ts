@@ -1,4 +1,3 @@
-import { m0009_report_indexes } from './0009_report_indexes';
 import { m0008_vengeful_microbe } from './0008_vengeful_microbe';
 import { m0007_petite_skrulls } from './0007_petite_skrulls';
 import { m0006_productive_thor } from './0006_productive_thor';
@@ -36,5 +35,4 @@ export const migrations: Migration[] = [
 	m0006_productive_thor,
 	m0007_petite_skrulls,
 	m0008_vengeful_microbe,
-	m0009_report_indexes,
 ];

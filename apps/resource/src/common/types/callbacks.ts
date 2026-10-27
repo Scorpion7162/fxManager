@@ -60,9 +60,6 @@ export const CALLBACK_NAMES = {
 	TOGGLE_BLIPS: 'toggle-blips',
 	LIST_PLAYERS: 'list-players',
 	PLAYER_ACTION: 'player-action',
-	LIST_REPORTS: 'list-reports',
-	GET_REPORT: 'get-report',
-	REPORT_ACTION: 'report-action',
 } as const;
 
 export interface PanelPlayer {

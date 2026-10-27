@@ -1,4 +1,3 @@
-import ReportsModule from './reports';
 import PlayerModule from './players';
 import ResourceModule from './resources';
 import IngameModule from './ingame';
@@ -8,10 +7,6 @@ import type { RouteModule } from '../../types';
 
 const internalRoutes: RouteModule['handler'] = async (fastify, options) => {
 	fastify.addHook('onRequest', requireLoopback);
-	fastify.register(ReportsModule.handler, {
-		...options,
-		prefix: ReportsModule.prefix,
-	});
 
 	fastify.register(PlayerModule.handler, {
 		...options,

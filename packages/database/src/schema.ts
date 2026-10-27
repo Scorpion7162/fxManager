@@ -161,52 +161,37 @@ export const kicks = sqliteTable('kicks', {
 
 // region Reports & Notes
 
-export const reports = sqliteTable(
-	'reports',
-	{
-		id: integer('id').primaryKey({ autoIncrement: true }),
-		reporterId: integer('reporter_id')
-			.notNull()
-			.references(() => players.id, { onDelete: 'cascade' }),
-		subject: text('subject').notNull(),
-		status: text('status').default('open').notNull(), // open, inprogress, resolved
-		openedAt: integer('opened_at', { mode: 'timestamp' })
-			.default(sql`CURRENT_TIMESTAMP`)
-			.notNull(),
-		lastAction: integer('last_action', { mode: 'timestamp' })
-			.default(sql`CURRENT_TIMESTAMP`)
-			.notNull(),
-	},
-	(table) => [
-		index('reports_last_action_idx').on(table.lastAction, table.id),
-		index('reports_owner_last_action_idx').on(
-			table.reporterId,
-			table.lastAction,
-			table.id,
-		),
-	],
-);
+export const reports = sqliteTable('reports', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	reporterId: integer('reporter_id')
+		.notNull()
+		.references(() => players.id, { onDelete: 'cascade' }),
+	subject: text('subject').notNull(),
+	status: text('status').default('open').notNull(), // open, inprogress, resolved
+	openedAt: integer('opened_at', { mode: 'timestamp' })
+		.default(sql`CURRENT_TIMESTAMP`)
+		.notNull(),
+	lastAction: integer('last_action', { mode: 'timestamp' })
+		.default(sql`CURRENT_TIMESTAMP`)
+		.notNull(),
+});
 
-export const reportMessages = sqliteTable(
-	'report_messages',
-	{
-		id: integer('id').primaryKey({ autoIncrement: true }),
-		reportId: integer('report_id').references(() => reports.id, {
-			onDelete: 'cascade',
-		}),
-		playerId: integer('player_id').references(() => players.id, {
-			onDelete: 'set null',
-		}),
-		adminId: integer('admin_id').references(() => adminUsers.id, {
-			onDelete: 'set null',
-		}),
-		message: text('message').notNull(),
-		timestamp: integer('timestamp', { mode: 'timestamp' })
-			.default(sql`CURRENT_TIMESTAMP`)
-			.notNull(),
-	},
-	(table) => [index('report_messages_report_idx').on(table.reportId, table.id)],
-);
+export const reportMessages = sqliteTable('report_messages', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
+	reportId: integer('report_id').references(() => reports.id, {
+		onDelete: 'cascade',
+	}),
+	playerId: integer('player_id').references(() => players.id, {
+		onDelete: 'set null',
+	}),
+	adminId: integer('admin_id').references(() => adminUsers.id, {
+		onDelete: 'set null',
+	}),
+	message: text('message').notNull(),
+	timestamp: integer('timestamp', { mode: 'timestamp' })
+		.default(sql`CURRENT_TIMESTAMP`)
+		.notNull(),
+});
 
 export const playerNotes = sqliteTable('player_notes', {
 	id: integer('id').primaryKey({ autoIncrement: true }),
