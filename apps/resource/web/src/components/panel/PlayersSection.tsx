@@ -15,8 +15,25 @@ import { showNotification } from '~/store/notifications';
 const PREVIEW_PLAYERS: PanelPlayer[] = [
 	{ playerId: 1, serverId: 1, name: 'Scorpion', ping: 24, online: true },
 	{ playerId: 2, serverId: 12, name: 'Alex Morgan', ping: 48, online: true },
-	{ playerId: 3, serverId: 26, name: 'Taylor', ping: 112, online: true },
+	{
+		playerId: 3,
+		serverId: 0,
+		name: 'Taylor',
+		ping: 0,
+		online: false,
+		lastSeen: Date.now() - 86400000,
+	},
 ];
+function lastSeenLabel(value?: number) {
+	if (!value || !Number.isFinite(value)) return 'Not recorded';
+	return new Date(value).toLocaleString([], {
+		month: 'short',
+		day: 'numeric',
+		year: 'numeric',
+		hour: '2-digit',
+		minute: '2-digit',
+	});
+}
 const ACTIONS = [
 	{ key: 'warn', label: 'Warn', permission: UserPermissions.WARN },
 	{ key: 'kick', label: 'Kick', permission: UserPermissions.KICK },
@@ -25,6 +42,7 @@ const ACTIONS = [
 
 export function PlayersSection({ permissions }: { permissions: number }) {
 	const [query, setQuery] = useState('');
+	const [scope, setScope] = useState<'online' | 'all'>('online');
 	const [players, setPlayers] = useState<PanelPlayer[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState('');
@@ -42,9 +60,17 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 		try {
 			const data = await fetchNui<PanelPlayer[] | null>(
 				'get-players',
-				{ query },
+				{ query, scope },
 				{
-					data: PREVIEW_PLAYERS,
+					data: PREVIEW_PLAYERS.filter(
+						(player) =>
+							(scope === 'all' || player.online) &&
+							(!query.trim() ||
+								player.name
+									.toLocaleLowerCase()
+									.includes(query.trim().toLocaleLowerCase()) ||
+								(player.online && String(player.serverId) === query.trim())),
+					),
 					delay: 150,
 				},
 			);
@@ -69,7 +95,7 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 		} finally {
 			if (sequence === loadSequence.current) setLoading(false);
 		}
-	}, [query]);
+	}, [query, scope]);
 	useEffect(() => {
 		let stopped = false;
 		let timer: ReturnType<typeof setTimeout>;
@@ -139,11 +165,13 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 					<h2 className="text-xl font-semibold">
 						Players{' '}
 						<span className="ml-2 text-sm font-normal text-muted-foreground">
-							{players.filter((p) => p.online).length} online
+							{scope === 'online' ? 'Online players' : 'Player records'}
 						</span>
 					</h2>
 					<p className="mt-1 text-sm text-muted-foreground">
-						Find a player and review the target before taking action.
+						{scope === 'online'
+							? 'Live connections, vehicle state and vitals.'
+							: 'Recent player records, including offline accounts. Search to find a specific player.'}
 					</p>
 				</div>
 				<Button
@@ -156,34 +184,56 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 					Refresh
 				</Button>
 			</header>
-			<div className="flex flex-wrap gap-x-6 gap-y-2 border-y py-3 text-sm">
-				<span>
-					<strong className="mr-1 text-lg">
-						{players.filter((p) => p.online).length}
-					</strong>{' '}
-					online matches
-				</span>
-				<span className="text-muted-foreground">
-					{players.filter((p) => p.inVehicle).length} in vehicles
-				</span>
-				<span className="text-muted-foreground">
-					{players.filter((p) => p.ping >= 150).length} high latency
-				</span>
-				<span className="ml-auto text-xs text-muted-foreground">
-					Search includes up to 50 database matches · refreshes every 5s
+			<div className="flex flex-wrap items-center gap-3 border-b pb-4">
+				<div
+					role="group"
+					aria-label="Player scope"
+					className="flex rounded-md bg-muted p-1"
+				>
+					{(['online', 'all'] as const).map((value) => (
+						<Button
+							key={value}
+							size="sm"
+							variant={scope === value ? 'secondary' : 'ghost'}
+							aria-pressed={scope === value}
+							disabled={pending}
+							onClick={() => {
+								setScope(value);
+								setSelected(null);
+								setReason('');
+							}}
+						>
+							{value === 'online' ? 'Online' : 'All players'}
+						</Button>
+					))}
+				</div>
+				<div className="relative min-w-[220px] max-w-lg flex-1">
+					<Search className="absolute left-3 top-3 size-4 text-muted-foreground" />
+					<Input
+						aria-label={
+							scope === 'online'
+								? 'Search online players'
+								: 'Search all player records'
+						}
+						className="pl-9"
+						placeholder={
+							scope === 'online'
+								? 'Search name or server ID…'
+								: 'Search name or identifier…'
+						}
+						maxLength={100}
+						value={query}
+						disabled={pending}
+						onChange={(event) => setQuery(event.target.value)}
+					/>
+				</div>
+				<span className="ml-auto text-xs text-muted-foreground" role="status">
+					{loading
+						? 'Searching…'
+						: `${players.length} ${players.length === 1 ? 'player' : 'players'}`}
 				</span>
 			</div>
-			<div className="relative max-w-lg">
-				<Search className="absolute left-3 top-3 size-4 text-muted-foreground" />
-				<Input
-					aria-label="Search online and offline players"
-					className="pl-9"
-					placeholder="Search online & offline by name, identifier or server ID…"
-					maxLength={100}
-					value={query}
-					onChange={(event) => setQuery(event.target.value)}
-				/>
-			</div>
+
 			{error && (
 				<div
 					role="alert"
@@ -201,10 +251,17 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 						<thead className="bg-muted/40 text-muted-foreground">
 							<tr>
 								<th className="px-4 py-3 font-medium">Player</th>
-								<th className="px-4 py-3 font-medium">Server ID</th>
-								<th className="px-4 py-3 font-medium">State</th>
-								<th className="px-4 py-3 font-medium">Vitals</th>
-								<th className="px-4 py-3 font-medium">Ping</th>
+								<th className="px-4 py-3 font-medium">Status</th>
+								{scope === 'online' ? (
+									<>
+										<th className="px-4 py-3 font-medium">Server ID</th>
+										<th className="px-4 py-3 font-medium">Vitals</th>
+										<th className="px-4 py-3 font-medium">Ping</th>
+									</>
+								) : (
+									<th className="px-4 py-3 font-medium">Last seen</th>
+								)}
+
 								<th className="px-4 py-3">
 									<span className="sr-only">Actions</span>
 								</th>
@@ -218,35 +275,68 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 								>
 									<td className="max-w-[240px] break-words px-4 py-3 font-medium">
 										{player.name}
-									</td>
-									<td className="px-4 py-3 font-mono tabular-nums">
-										{player.online ? `#${player.serverId}` : '—'}
+										<span className="mt-1 block font-mono text-xs font-normal text-muted-foreground">
+											Player #{player.playerId}
+										</span>
 									</td>
 									<td className="px-4 py-3 text-xs">
-										{!player.online
-											? 'Offline'
-											: player.health === undefined
-												? 'Online · Spawning'
-												: player.health <= 0
-													? 'Online · Dead'
-													: player.inVehicle
-														? 'Online · In vehicle'
-														: 'Online · On foot'}
-										<span className="mt-1 block text-muted-foreground">
-											Bucket {player.bucket ?? '—'}
+										<span
+											className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-1 font-medium ${player.online ? 'border-primary/30 bg-primary/10 text-primary' : 'text-muted-foreground'}`}
+										>
+											<span
+												aria-hidden="true"
+												className={`size-1.5 rounded-full ${player.online ? 'bg-primary' : 'bg-muted-foreground'}`}
+											/>
+											{player.online ? 'Online' : 'Offline'}
 										</span>
+										{scope === 'online' && (
+											<span className="mt-2 block text-muted-foreground">
+												{player.health === undefined
+													? 'Spawning'
+													: player.health <= 100
+														? 'Dead'
+														: player.inVehicle
+															? 'In vehicle'
+															: 'On foot'}{' '}
+												· Bucket {player.bucket ?? '—'}
+											</span>
+										)}
 									</td>
-									<td className="px-4 py-3 text-xs tabular-nums">
-										{player.health === undefined
-											? '—'
-											: `${Math.max(0, player.health - 100)}/${Math.max(0, (player.maxHealth ?? 200) - 100)} HP`}
-										<span className="mt-1 block text-muted-foreground">
-											{player.online ? `${player.armour ?? 0} armour` : ''}
-										</span>
-									</td>
-									<td className="px-4 py-3 tabular-nums">
-										{player.online ? `${player.ping} ms` : '—'}
-									</td>
+									{scope === 'online' ? (
+										<>
+											<td className="px-4 py-3 font-mono tabular-nums">
+												#{player.serverId}
+											</td>
+											<td className="px-4 py-3 text-xs tabular-nums">
+												{player.health === undefined
+													? '—'
+													: `${Math.max(0, player.health - 100)}/${Math.max(0, (player.maxHealth ?? 200) - 100)} HP`}
+												<span className="mt-1 block text-muted-foreground">
+													{player.armour ?? 0} armour
+												</span>
+											</td>
+											<td className="px-4 py-3 tabular-nums">
+												{player.ping} ms
+											</td>
+										</>
+									) : (
+										<td className="px-4 py-3 text-sm text-muted-foreground">
+											{player.online ? (
+												'Connected now'
+											) : (
+												<time
+													dateTime={
+														player.lastSeen && Number.isFinite(player.lastSeen)
+															? new Date(player.lastSeen).toISOString()
+															: undefined
+													}
+												>
+													{lastSeenLabel(player.lastSeen)}
+												</time>
+											)}
+										</td>
+									)}
+
 									<td className="px-4 py-3 text-right">
 										<Button
 											variant="outline"
@@ -254,6 +344,16 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 											disabled={pending}
 											onClick={() => {
 												setSelected(player);
+												setAction(
+													ACTIONS.find(
+														(item) =>
+															PermissionManager.has(
+																permissions,
+																item.permission,
+															) &&
+															(player.online || item.key !== 'kick'),
+													)?.key ?? 'warn',
+												);
 												setReason('');
 											}}
 										>
@@ -276,9 +376,17 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 							<div className="p-8 text-center text-sm text-muted-foreground">
 								{query
 									? 'No players match. Try a name or exact server ID.'
-									: 'No players are connected.'}
+									: scope === 'online'
+										? 'No players are connected. Switch to All players to search player history.'
+										: 'No player records found.'}
 							</div>
 						)
+					)}
+					{scope === 'all' && (
+						<p className="border-t px-4 py-3 text-xs text-muted-foreground">
+							Includes up to 50 recent database matches plus matching online
+							players. Narrow your search to find older accounts.
+						</p>
 					)}
 				</div>
 				<aside className="rounded-md border p-4" aria-label="Selected player">
@@ -340,9 +448,9 @@ export function PlayersSection({ permissions }: { permissions: number }) {
 								</dl>
 							)}
 							{!connected && (
-								<p role="alert" className="text-sm text-destructive">
-									This player is offline. Warnings and bans are available;
-									kicking requires an online player.
+								<p className="text-sm text-muted-foreground">
+									Last seen: {lastSeenLabel(liveSelected?.lastSeen)}. Kicking
+									requires an online player.
 								</p>
 							)}
 							<label className="flex flex-col gap-2 text-sm font-medium">

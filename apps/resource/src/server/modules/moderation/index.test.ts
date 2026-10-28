@@ -11,7 +11,7 @@ let permissions = UserPermissions.MASTER;
 let request: unknown;
 let fail = false;
 let online: { id: number; serverId: number; name: string }[] = [];
-let matches: { id: number; name: string }[] = [];
+let matches: { id: number; name: string; lastSeen?: string }[] = [];
 mock.module('../../utils/callbacks', () => ({
 	ServerCallbacks: {
 		register: (
@@ -149,4 +149,44 @@ test('matches an online server ID even when database search has no matches', asy
 	expect(
 		await registrations.get('list-players')!.handler(1, { query: '12' }),
 	).toMatchObject([{ playerId: 44, serverId: 12, online: true }]);
+});
+
+test('online scope filters connections without querying player history', async () => {
+	online = [
+		{ id: 44, serverId: 12, name: 'Alex' },
+		{ id: 45, serverId: 13, name: 'Blair' },
+	];
+	expect(
+		await registrations
+			.get('list-players')!
+			.handler(1, { scope: 'online', query: 'Alex' }),
+	).toMatchObject([{ playerId: 44, online: true }]);
+	expect(request).toMatchObject({ endpoint: '/ingame/players' });
+});
+test('all scope browses recent offline records without a search and includes last seen', async () => {
+	matches = [
+		{ id: 55, name: 'Offline player', lastSeen: '2026-10-25T14:30:00.000Z' },
+	];
+	expect(
+		await registrations
+			.get('list-players')!
+			.handler(1, { scope: 'all', query: '' }),
+	).toMatchObject([
+		{
+			playerId: 55,
+			online: false,
+			lastSeen: Date.parse('2026-10-25T14:30:00.000Z'),
+		},
+	]);
+	expect(request).toMatchObject({
+		endpoint: '/ingame/players/search?q=&pageSize=50',
+	});
+});
+test('rejects unsupported scopes before calling core', async () => {
+	expect(
+		await registrations
+			.get('list-players')!
+			.handler(1, { scope: 'unexpected' }),
+	).toBeNull();
+	expect(request).toBeUndefined();
 });

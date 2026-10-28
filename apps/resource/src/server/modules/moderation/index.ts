@@ -30,16 +30,24 @@ const actionPermissions = {
 ServerCallbacks.register<unknown, PanelPlayer[] | null>(
 	CALLBACK_NAMES.LIST_PLAYERS,
 	async (_, payload) => {
-		const query =
-			payload && typeof payload === 'object'
-				? (payload as { query?: unknown }).query
-				: undefined;
 		if (
-			query !== undefined &&
-			(typeof query !== 'string' || query.length > 100)
+			payload !== null &&
+			payload !== undefined &&
+			(typeof payload !== 'object' || Array.isArray(payload))
+		)
+			return null;
+		const { query, scope } = (payload ?? {}) as {
+			query?: unknown;
+			scope?: unknown;
+		};
+		if (
+			(query !== undefined &&
+				(typeof query !== 'string' || query.length > 100)) ||
+			(scope !== undefined && scope !== 'online' && scope !== 'all')
 		)
 			return null;
 		const search = typeof query === 'string' ? query.trim() : '';
+
 		const online = (
 			await QueryManager<OnlinePlayer[]>({
 				endpoint: '/ingame/players',
@@ -65,9 +73,15 @@ ServerCallbacks.register<unknown, PanelPlayer[] | null>(
 					: {}),
 			};
 		});
-		if (!search) return online;
+		const onlineMatches = online.filter(
+			(player) =>
+				!search ||
+				player.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()) ||
+				String(player.serverId) === search,
+		);
+		if (scope === 'online' || (!scope && !search)) return onlineMatches;
 		const matches = await QueryManager<{
-			items: { id: number; name: string }[];
+			items: { id: number; name: string; lastSeen?: string }[];
 		}>({
 			endpoint: `/ingame/players/search?q=${encodeURIComponent(search)}&pageSize=50`,
 			method: 'GET',
@@ -79,17 +93,15 @@ ServerCallbacks.register<unknown, PanelPlayer[] | null>(
 					playerId: player.id,
 					name: player.name,
 					online: false,
+					lastSeen: player.lastSeen
+						? new Date(player.lastSeen).getTime()
+						: undefined,
 					serverId: 0,
 					ping: 0,
 				},
 			]),
 		);
-		for (const player of online)
-			if (
-				player.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()) ||
-				String(player.serverId) === search
-			)
-				found.set(player.playerId, player);
+		for (const player of onlineMatches) found.set(player.playerId, player);
 		return [...found.values()].sort(
 			(a, b) => Number(b.online) - Number(a.online),
 		);

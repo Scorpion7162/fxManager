@@ -13,7 +13,7 @@ The Reports page is a UI scaffold. Backend integration is deferred while its des
 Tags appear above other streamed players within 150 metres, not your own character. They show a server ID, name, armour value, health bar, and speaking indicator. Blips distinguish on-foot, vehicle, and dead players in your routing bucket.
 
 
-Displayed health subtracts GTA’s 100-point offset and clamps at zero (200 → 100, 150 → 50). The player roster includes health, armour, vehicle state, ping, and routing bucket. Search includes online players and up to 50 database matches by name or identifier, with online/offline status. Offline players can be warned or banned; kicks require an online player. Moderation actions still require their individual kick, ban, or warn permissions.
+Displayed health subtracts GTA’s 100-point offset and clamps at zero (200 → 100, 150 → 50). The player roster includes health, armour, vehicle state, ping, and routing bucket. The Players page defaults to Online. All players includes online players and up to 50 recent database matches by name or identifier, with online/offline status and last-seen times for offline players. Offline players can be warned or banned; kicks require an online player. Moderation actions still require their individual kick, ban, or warn permissions.
 
 ## Development
 

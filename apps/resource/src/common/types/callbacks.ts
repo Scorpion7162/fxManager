@@ -64,6 +64,7 @@ export const CALLBACK_NAMES = {
 
 export interface PanelPlayer {
 	online: boolean;
+	lastSeen?: number;
 	health?: number;
 	maxHealth?: number;
 	armour?: number;
